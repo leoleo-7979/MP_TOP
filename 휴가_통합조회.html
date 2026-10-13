@@ -234,75 +234,25 @@
   // 숫자/날짜인 컬럼("잔여 월차 수"/"잔여 연차 수"/"입사일"/"퇴사일")의 헤더 텍스트가
   // 구글 gviz의 타입 변환 버그로 빈 값이 되어버리는 문제를 피할 수 있습니다. 휴가사용내역
   // 탭(GID_HISTORY)은 고정된 열 번호를 그대로 쓰고 있어서(원래 동작 그대로) headers=0을 씁니다.
+  // 시트에 누군가 일반 "필터"를 걸어도 항상 전체 데이터를 보도록, 구글 gviz 대신
+  // Apps Script 백엔드(action=getSheetData)를 거쳐 읽습니다. (Code.gs의 ALLOWED_READ_SHEETS에 등록된 탭만 허용)
+  var DASHBOARD_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxUBGesJFSJo_Eatdwao6riV2Vl12q8JbwFaCUtUYjKD-fYnkXhZpTn4SJtfTEt7cLxqA/exec';
   function fetchSheet(gid, onDone, onError, headersCount) {
-    headersCount = headersCount || 0;
-    window.google = window.google || {};
-    window.google.visualization = window.google.visualization || {};
-    window.google.visualization.Query = window.google.visualization.Query || {};
-
-    var finished = false;
-    var handlerName = 'handler_' + gid;
-
-    var timeoutId = setTimeout(function() {
-      if (!finished) {
-        finished = true;
-        cleanup();
-        onError(new Error('응답 시간이 초과되었습니다. (gid: ' + gid + ')'));
-      }
-    }, 12000);
-
-    function cleanup() {
-      clearTimeout(timeoutId);
-      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
-      delete window.google.visualization.Query[handlerName];
-    }
-
-    window.google.visualization.Query[handlerName] = function(resp) {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      try {
-        if (!resp || resp.status === 'error') {
-          var msg = (resp && resp.errors && resp.errors[0] && resp.errors[0].detailed_message) || '시트 응답 오류';
-          throw new Error(msg);
-        }
-        var table = resp.table;
-        var rows = [];
-        if (headersCount > 0) {
-          // headers=2로 요청한 경우: 구글이 헤더 행을 데이터에서 분리해서 각 컬럼의
-          // 실제 항목명을 table.cols[].label로 정확히 돌려줍니다. 이걸 첫 행으로
-          // 만들어 앞에 끼워 넣고, 그 다음부터는 순수 데이터 행만 오도록 합니다.
-          rows.push(table.cols.map(function(c) { return c.label || ''; }));
-        }
-        for (var r = 0; r < table.rows.length; r++) {
-          var cells = table.rows[r].c;
-          var rowArr = [];
-          for (var c = 0; c < cells.length; c++) {
-            var cell = cells[c];
-            if (!cell) { rowArr.push(''); continue; }
-            var val = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
-            rowArr.push(val === null || val === undefined ? '' : String(val));
-          }
-          rows.push(rowArr);
-        }
-        onDone(rows);
-      } catch (e) {
-        onError(e);
-      }
-    };
-
-    var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
-      '/gviz/tq?gid=' + gid + '&headers=' + headersCount + '&tqx=out:json;responseHandler:google.visualization.Query.' + handlerName;
-
-    var scriptEl = document.createElement('script');
-    scriptEl.src = url;
-    scriptEl.onerror = function() {
-      if (finished) return;
-      finished = true;
-      cleanup();
-      onError(new Error('시트를 불러오지 못했습니다. (gid: ' + gid + ') 공유 설정을 확인해주세요.'));
-    };
-    document.body.appendChild(scriptEl);
+    var url = DASHBOARD_WEBAPP_URL + '?action=getSheetData' +
+      '&sheetId=' + encodeURIComponent(SHEET_ID) + '&gid=' + encodeURIComponent(gid);
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function() { if (ctrl) ctrl.abort(); }, 30000);
+    fetch(url, ctrl ? { signal: ctrl.signal } : undefined).then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(data) {
+      clearTimeout(timer);
+      if (!data || !data.ok) throw new Error((data && data.error) || '시트 응답 오류');
+      onDone(data.rows);
+    }).catch(function(err) {
+      clearTimeout(timer);
+      onError(err && err.name === 'AbortError' ? new Error('응답 시간이 초과되었습니다.') : (err instanceof Error ? err : new Error(String(err))));
+    });
   }
 
   function loadAll(callback, onError) {
