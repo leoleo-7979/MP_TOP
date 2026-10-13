@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAYAAAD0eNT6AAAgZ0lEQVR4nO3debCWZfkH8OuwdPAImrkgWhkqZkqUmmviWLlMlgK55DKIIIJWU2k1OS3T1B81NU2WTsWimKDmEuKapoxWgpmWlpoiuKaioGIsIju/P/xhmCzvOe9yP89zfz4zzZjpub/vcyau73M/y9sWFFJHR8fa1BkAGmHp0qVtqTPwTn4piRjwAG9SENJw0FvAsAfoHKWg+RzgJjDwARpLIWg8B7QBDHyA1lII6ucAdpGhD1AMykDXOGidYOgDFJsyUDsHajMMfYByUgY2zcHZCIMfoBoUgQ1zUNZj6ANUmzLwXw5EGPwAuVEEMi8ABj9A3nIuAll+cIMfgPXlWASy+sAGPwCbklMRyOKDGvwAdEYORaBb6gDNZvgD0Fk5zI7KNpwcfnkANF9VdwMq96EMfgCaoWpFoFKXAAx/AJqlajOmEm2mar8UAIqtCrsBpd8BMPwBaLUqzJ5SF4Aq/AIAKKeyz6BSbmGU/aADUC1lvCRQuh0Awx+AoinjbCpVASjjAQYgD2WbUaXYsijbQQUgb2W4JFD4HQDDH4CyKcPsKnQBKMMBBIANKfoMK2wBKPqBA4DNKfIsK2QBKPIBA4DOKOpMK1wBKOqBAoCuKuJsK1QBKOIBAoBGKNqMK0wBKNqBAYBGK9KsK0QBKNIBAYBmKsrMS14AinIgAKBVijD7khaAIhwAAEgh9QxMVgBSf3AASC3lLExSAAx/AHhTqpnY8gJg+APA26WYjS0tAIY/AGxYq2dkywqA4Q8Am9bKWdmSAmD4A0BtWjUzk78HAABovaYXAGf/ANA5rZidTS0Ahj8AdE2zZ2jTCoDhDwD1aeYsdQ8AAGSoKQXA2T8ANEazZmrDC4DhDwCN1YzZ2tACYPgDQHM0esa6BwAAMtSwAuDsHwCaq5GztiEFwPAHgNZo1Mx1CQAAMlR3AXD2DwCt1YjZawcAADJUVwFw9g8AadQ7g7tcAAx/AEirnlnsEgAAZKhLBcDZPwAUQ1dnsh0AAMhQpwuAs38AKJauzGY7AACQoU4VAGf/AFBMnZ3RdgAAIEM1FwBn/wBQbJ2Z1XYAACBDNRUAZ/8AUA61zmw7AACQIQUAADK02QJg+x8AyqWW2W0HAAAytMkC4OwfAMppczPcDgAAZEgBAIAMbbQA2P4HgHLb1Cy3AwAAGVIAACBDGywAtv8BoBo2NtPtAABAhhQAAMjQOwqA7X8AqJYNzXY7AACQIQUAADKkAABAht5WAFz/B4Bq+t8ZbwcAADKkAABAhhQAAMjQWwXA9X8AqLb1Z70dAADIkAIAABlSAAAgQwoAAGSoW4QbAAEgF+tmvh0AAMiQAgAAGVIAACBDCgAAZEgBAIAMKQAAkCEFAAAy1OYdAACQHzsAAJAhBQAAMqQAAECGFAAAyJACAAAZUgAAIEMKAABkSAEAgAwpAACQIQUAADKkAABAhhQAAMiQAgAAGVIAACBDCgAAZEgBAIAMKQAAkCEFAAAypAAAQIYUAADIkAIAABlSAAAgQwoAAGRIAQCADCkAAJAhBQAAMqQAAECGFAAAyJACAAAZUgAAIEMKAABkSAEAgAwpAACQIQUAADKkAABAhhQAAMiQAgAAGVIAACBDCgAAZEgBAIAMKQAAkCEFAAAypAAAQIYUAADIkAIAABlSAAAgQwoAAGRIAQCADCkAAJAhBQAAMqQAAECGFAAAyJACAAAZUgAAIEMKAABkSAEAgAwpAACQIQUAADKkAABAhhQAAMiQAgAAGVIAACBDCgAAZEgBAIAMKQAAkCEFAAAypAAAQIYUAADIkAIAABlSAAAgQwoAAGRIAQCADCkAAJAhBQAAMtQjdYAcfOITn4ibb745dYyGOfvss2PKlCmpYxTSF7/4xfjJT36SOkbD7LHHHvHCCy+kjrFBVfv/Vb1WrlwZy5cvjxUrVsSyZcve9teLFi2K+fPnx/z582PevHlv/fX8+fPjqaeeitdeey11fBJQAOi0c845RwHYgLa2thgzZkzqGGSqZ8+e0bNnzy79uy+//HLMmjUrZs2aFY8//ng89thj8cgjj8Qrr7zS4JQUiQJAp33kIx+Jgw8+OP7yl7+kjlIoRx55ZOy+++6pY0Cnbb/99rH99tvH4MGD3/b358yZE3fffXfMmDEjZs6cGc8//3yihDSDAkCXjB07VgH4H+ecc07qCNBQAwYMiAEDBsSoUaMiIuLZZ5+NO++8M6677rr405/+FKtXr06ckHq4CZAuGTp0aOy4446pYxTG7rvvHkceeWTqGNBUu+yyS4wcOTJuuummeOqpp+LCCy+Mww47LLp1M0rKyG+NLunZs2eMHj06dYzCGDt2bLS1taWOAS2z3XbbxZlnnhm33nprPPHEE/Htb387tt9++9Sx6AQFgC4bNWpUl286qpLevXvH8OHDU8eAZPr27Rvf+ta3YtasWfGrX/0q9txzz9SRqIECQJf17ds3hg0bljpGcqeddlr06dMndQxIrlevXjFixIj429/+FtOmTYuPfOQjqSOxCQoAdcn9xre2trY4++yzU8eAQmlra4ujjjoqZsyYEb/85S9dGigoBYC6HHDAAbHPPvukjpHMJz/5ydhjjz1Sx4BC6tatW5xxxhnx8MMPx1e+8hWXDAtGAaBuOe8C5PzZoVZ9+vSJH/7wh3HvvffGXnvtlToO/08BoG4nnHBCbLvttqljtFz//v3j6KOPTh0DSmPPPfeMu+++2xNEBaEAULf29vYYOXJk6hgtN3bsWM8/Qyf16tUrfvGLX8Tll18eW2+9deo4WfOnFw1x1llnRffu3VPHaJktt9wyTj/99NQxoLSGDRsWM2fOjN122y11lGwpADTEe9/73vjsZz+bOkbLnHLKKc5eoE79+/eP6dOnx4c//OHUUbKkANAwOd0Q59E/aIwddtghbr/99jj44INTR8mOAkDDDB48OIs7fA8//PD40Ic+lDoGVMZWW20VN954YxxxxBGpo2RFAaChcjgzzmmnA1qlo6MjrrzySm8PbCEFgIY6+eSTK31tfJdddoljjjkmdQyopC233DJ+97vfRb9+/VJHyYICQENV/e74MWPGePQPmminnXaKa6+9Njo6OlJHqTx/ktFwVR2SW2yxRYwYMSJ1DKi8ffbZJyZMmJA6RuVV709pktt1113jqKOOSh2j4U4++eTYZpttUseALAwbNiw+//nPp45RaQoATVHFmwGr+JmgyH7605/GDjvskDpGZSkANMURRxwRAwYMSB2jYQYPHhwDBw5MHQOy8p73vCcuuOCC1DEqSwGgKdra2mLMmDGpYzSMR/8gjaFDh8bQoUNTx6gkBYCmGT58ePTu3Tt1jLrl9ppjKJrvf//7WX3XSKsoADRNnz594tRTT00do25jxozxhw8ktPvuu8dJJ52UOkblKAA01dixY1NHqEuvXr3ijDPOSB0DsvfNb35TEW8wBYCm2nPPPePwww9PHaPLTjrppNh2221Tx4DsDRgwIE444YTUMSqlR+oAVN8555wTf/zjH1PH6BKP/lGPffbZJ2bPnt2Un92rV69ob2+P3r17R9++faNfv37Rv3//GDhwYAwcODAGDRpUuTPm8847L66++urUMSpDAaDpPv3pT8f73//++Pe//506SqcccsghvpiEwlq2bFksW7YsFi5cGC+88MI7/vett946DjvssBg6dGgce+yxseWWWyZI2Vjrys0jjzySOkoluARA03Xv3r2UjwQ6+6fMFi5cGDfddFOceeaZseuuu8Z5550Xzz//fOpYdTvllFNSR6gMBYCWOOOMM2KLLbZIHaNmO+20UwwZMiR1DGiIJUuWxPjx42PgwIFx/vnnx5IlS1JH6rITTzyxkt81koKjSEtss802ceKJJ6aOUbOzzjorevRwhYxqWblyZVx00UWx3377xcyZM1PH6ZKdd945Dj300NQxKkEBoGXK8ja99vb2GDlyZOoY0DTPP/98HHPMMTF+/PjUUbrkuOOOSx2hEhQAWmbQoEFx8MEHp46xWccff3xsv/32qWNAU61atSrOO++8+NnPfpY6Sqd9/OMfTx2hEhQAWqoMN9aVZacCGuG73/1uTJo0KXWMThk4cGBstdVWqWOUngJASw0ZMiT69euXOsZGHXjggbHvvvumjgEt9bWvfS3uv//+1DFq1q1btzjooINSxyg9BYCW6tmzZ5x55pmpY2xUGXYooNFWrFgRY8aMiRUrVqSOUjOXAeqnANByZ555ZrzrXe9KHeMddtxxxxg2bFjqGJDE7Nmz46KLLkodo2YHHnhg6gilpwDQcjvssEMhB+3o0aOjZ8+eqWNAMj//+c9j6dKlqWPUZLfddksdofQUAJIo2lb7u971rhg1alTqGJDUggUL4vLLL08doyb9+vWL9vb21DFKTQHIXKr38x9wwAGFutlu2LBh0bdv3yRrP/vss0nWhQ0py5fttLW1xS677JI6RqkpAJmbMGFCsrWLtAuQ8tG/lL8D+F9//etf48UXX0wdoya77rpr6gilpgBk7sorr4xFixYlWfuEE06I7bbbLsna69tvv/1i//33T7L2vHnz4vrrr0+yNmzI2rVrY8aMGalj1KR///6pI5SaApC5119/PaZMmZJk7aK8cvcLX/hCsrUvvvjiWLlyZbL1YUPuu+++1BFq4o2d9VEAiPHjx8fatWuTrD169Ojo3r17krUj3vwD5HOf+1yStVeuXBmXXHJJkrVhUx599NHUEWrS0dGROkKpKQDEk08+GXfccUeStd/73vfGsccem2TtiLTvJJg2bVrMmzcvydqwKaluDu6sLbfcMnWEUlMAiIiIX/3qV8nWTnUzYM+ePWP06NFJ1o6I+PWvf51sbdiU559/PnWEmigA9VEAiIiI6dOnx5w5c5KsPXjw4Nh7771bvu7QoUOTfS/BAw88UJrrrORnxYoVsWrVqtQxNsslgPooAETEm3f+5vZIYMrHEJ39U3RleCOgHYD6KAC8ZcqUKbFkyZIka5988smx9dZbt2y9j370o8m+TeyVV16JqVOnJlkbatWtW/HHQ6qbl6ui+L9hWmbx4sVxxRVXJFm7o6MjRowY0bL1Uj76N2nSpFi+fHmy9aEWvXr1Sh1hs15//fXUEUpNAeBtxo0bl6xVjxkzpiVnHdtuu22ccMIJTV9nQ1atWhUTJ05MsjbUqlevXtGjR4/UMTarDJcpikwB4G1mz54dd911V5K1+/fvH0cddVTT1xk1alSyLxG54YYbYu7cuUnWhlq9733vSx2hJnYA6qMA8A4pb1Br9jv5e/ToEWeddVZT19iUcePGJVsbalWWAmAHoD4KAO9w2223xdNPP51k7U996lMxYMCApv384447Lnbeeeem/fxNeeihh+Kee+5JsjZ0xsCBA1NHqIkCUB8FgHdYs2ZNskcC29raYsyYMU37+R79g8078MADU0eoiTdp1kcBYIMuu+yyZNfXhg8fHr179274z/3whz8cH//4xxv+c2uxYMGCuPbaa5OsDZ3RvXv3OPTQQ1PHqMlTTz2VOkKpKQBs0MKFC+Oqq65KsnafPn3itNNOa/jPbfb9BZvym9/8Jt54441k60OtDj300EJ8TXctnnnmmdQRSk0BYKNS3rA2duzYhv68bbbZJk466aSG/sxarV692qN/lMapp56aOkJN1qxZE88++2zqGKWmALBRjz76aPz5z39OsvYHP/jB+MQnPtGwnzdy5MjYYostGvbzOuOWW24pzberkbcdd9wxWVHurLlz58aKFStSxyg1BYBNSnnjWqNu2OvevXvSR//c/EdZfOMb30j29did9eSTT6aOUHoKAJt0yy23xHPPPZdk7WOOOSZ22WWXun/OZz7zmXj/+9/fgESd99hjjyXbRYHOGDRoUNKi3Fn33ntv6gilpwCwSatXr072SGC3bt0a8khgypv/nP1TBh0dHTFx4sTo3r176ig1mzlzZuoI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">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>휴가 통합 조회</title>
+<style>
+  :root {
+    --ink: #4a3f5c;
+    --paper: #fdf6fb;
+    --line: #ecdcf0;
+    --accent: #8e6fc4;
+    --accent-soft: #f1e8fb;
+    --warn: #d6748c;
+    --muted: #8b7f99;
+    --muted2: #c6b6da;
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); padding: 40px 20px 80px;
+    font-size: 16px;
+  }
+  @media (max-width: 480px) {
+    body { padding: 22px 16px 64px; }
+    .wrap { max-width: 100%; }
+    .panel { padding: 18px; }
+    .stat .value { font-size: 21px; }
+    table { font-size: 13.5px; }
+    thead th, tbody td { padding: 8px 10px; }
+  }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 800; margin: 0 0 6px; text-align: center; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0 0 28px; text-align: center; }
+  .panel {
+    background: #fff; border: 1px solid var(--line); border-radius: 18px;
+    padding: 24px; box-shadow: 0 3px 12px rgba(142,111,196,0.08);
+  }
+  input[type=text] {
+    width: 100%; font-size: 17px; padding: 13px 15px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: #fdf9fe; color: var(--ink);
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button {
+    width: 100%; margin-top: 10px; font-family: var(--sans);
+    font-size: 16px; font-weight: 700; padding: 13px;
+    border-radius: 999px; border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; cursor: pointer;
+  }
+  button:hover { opacity: 0.92; }
+  button:disabled { opacity: 0.6; cursor: default; }
+  .status { font-size: 14px; color: var(--warn); text-align: center; margin-top: 12px; min-height: 18px; word-break: break-word; }
+  .notice { font-size: 12.5px; color: var(--muted2); text-align: center; margin-top: 8px; }
+
+  .name-header { display: flex; justify-content: space-between; align-items: baseline; margin: 22px 0 10px; }
+  .name-header .name { font-size: 19px; font-weight: 800; }
+  .name-header .branch { font-size: 13px; color: var(--muted); }
+
+  .section-title { font-size: 13.5px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.04em; margin: 22px 0 10px; }
+
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .stat {
+    background: var(--accent-soft); border-radius: 10px; padding: 13px; text-align: center;
+  }
+  .stat .label { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+  .stat .value { font-size: 24px; font-weight: 800; color: var(--ink); }
+  .meta { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+
+  .summary-row { display: flex; gap: 10px; }
+  .summary {
+    flex: 1; background: #faf3fb; border: 1px solid var(--line); border-radius: 10px; padding: 11px; text-align: center;
+  }
+  .summary .label { font-size: 12.5px; color: var(--accent); font-weight: 600; margin-bottom: 3px; }
+  .summary .value { font-size: 18px; font-weight: 800; color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 14.5px; }
+  thead th {
+    background: var(--accent-soft); color: var(--accent); text-align: left;
+    padding: 10px 12px; border-bottom: 2px solid var(--accent); font-weight: 700; white-space: nowrap;
+  }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:nth-child(even) { background: #faf3fb; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .tag-month { background: var(--accent-soft); color: var(--accent); }
+  .tag-annual { background: #fbe4ec; color: var(--warn); }
+  .tag-etc { background: #f0eaf7; color: var(--muted); }
+  .note { color: var(--muted2); font-size: 13px; }
+  .table-scroll { overflow-x: auto; }
+
+  .updated { text-align: center; font-size: 12.5px; color: var(--muted2); margin-top: 20px; }
+  .empty { color: var(--muted2); font-size: 14.5px; text-align: center; margin-top: 16px; }
+  .divider { border: none; border-top: 1px solid var(--line); margin: 22px 0 0; }
+
+  .back-home {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; box-sizing: border-box;
+    padding: 13px; margin: 0 0 20px;
+    border: 1px solid var(--line); border-radius: 14px;
+    background: #fff; color: var(--accent);
+    font-size: 15px; font-weight: 700; text-decoration: none;
+    box-shadow: 0 3px 10px rgba(142,111,196,0.08);
+  }
+  .back-home:hover { background: var(--accent-soft); }
+
+  /* ---- PC(데스크톱) 화면에서는 더 넓은 레이아웃으로 ---- */
+  @media (min-width: 1024px) {
+    .wrap { max-width: 860px; }
+    h1 { font-size: 32px; }
+    .sub { font-size: 17px; }
+    .panel { padding: 30px; }
+    input[type=text] { font-size: 18px; padding: 15px 17px; }
+    .notice { font-size: 13.5px; }
+    button { font-size: 17px; padding: 15px; }
+    .status { font-size: 15px; }
+    .name-header .name { font-size: 22px; }
+    .name-header .branch { font-size: 14.5px; }
+    .section-title { font-size: 15px; }
+    .stat { padding: 16px; }
+    .stat .label { font-size: 14px; }
+    .stat .value { font-size: 27px; }
+    .meta { font-size: 14.5px; }
+    .summary { padding: 14px; }
+    .summary .label { font-size: 13px; }
+    .summary .value { font-size: 20px; }
+    table { font-size: 15.5px; }
+    thead th, tbody td { padding: 12px 15px; }
+    .tag { font-size: 13.5px; padding: 4px 12px; }
+    .empty { font-size: 15.5px; }
+    .back-home { padding: 14px; border-radius: 14px; font-size: 15.5px; }
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-home" href="index.html">‹ 매니저 관리 시스템으로 돌아가기</a>
+  <h1>휴가 통합 조회</h1>
+  <p class="sub">이름 또는 전화번호를 입력하면 잔여일수와 사용 내역을 함께 보여줍니다.</p>
+
+  <div class="panel">
+    <div style="display:flex; gap:8px; margin-bottom:10px;">
+      <label style="flex:1; text-align:center; padding:10px; border:1px solid var(--line); border-radius:10px; cursor:pointer; font-weight:700; background:#fff;"><input type="radio" name="mode" value="active" checked onchange="onModeChange()"> 재직자</label>
+      <label style="flex:1; text-align:center; padding:10px; border:1px solid var(--line); border-radius:10px; cursor:pointer; font-weight:700; background:#fff;"><input type="radio" name="mode" value="resigned" onchange="onModeChange()"> 퇴사자</label>
+    </div>
+    <input type="text" id="nameInput" placeholder="이름 또는 전화번호 입력 (예: 홍길동 / 010-1234-5678)" autocomplete="off">
+    <div class="notice">※ 프리랜서, 건수제 매니저는 월차/연차가 생성되지 않습니다.</div>
+    <button type="button" id="searchBtn" onclick="doSearch()">조회하기</button>
+    <div class="status" id="status"></div>
+    <div id="results"></div>
+  </div>
+
+  <div class="updated" id="updated"></div>
+</div>
+
+<script>
+  var SHEET_ID = '1X3LpMT3fl7AoIPPPNwces5UK4-uWxEkuDBkRX6BWvAE';
+  var GID_INFO = '578655642';   // 사원정보 탭: 잔여 월차/연차 수
+  var GID_HISTORY = '628017033'; // 휴가사용내역 탭 (전체 이력)
+
+  // 헤더 이름으로 컬럼 위치를 자동으로 찾습니다. 시트에 컬럼이 추가/삭제/이동되어도
+  // 이 코드를 매번 고치지 않도록, 고정된 열 번호 대신 시트의 실제 헤더(항목명)
+  // 텍스트를 기준으로 위치를 찾습니다. 헤더 행 자체도 고정된 행 번호가 아니라,
+  // 아래 HEADER_LABELS 항목들이 가장 많이 일치하는 행을 헤더 행으로 자동 인식합니다.
+  // (참고: 이 시트는 1행이 별도 용도이고, 실제 항목명은 2행에 있습니다.)
+  var HEADER_LABELS = {
+    memberId: '회원번호', branch: '지점', role: '업무구분', name: '직원명',
+    hireDate: '입사일', resignDate: '퇴사일', employmentStatus: '재직상태',
+    phone: '연락처', monthly: '잔여 월차 수', annual: '잔여 연차 수'
+  };
+  var COL_INFO = null;         // findHeaderRow_()가 채웁니다.
+  var INFO_DATA_START_ROW = 0; // findHeaderRow_()가 채웁니다.
+
+  // rows 안에서 헤더 행을 찾아 { colMap: {필드명: 열 번호}, dataStartRow: 숫자 }를
+  // 반환합니다. HEADER_LABELS 중 절반 이상이 일치하는 첫 번째 행을 헤더 행으로
+  // 인정합니다. 못 찾으면 null을 반환합니다.
+  function findHeaderRow_(rows) {
+    var keys = Object.keys(HEADER_LABELS);
+    var needed = Math.ceil(keys.length / 2);
+    for (var r = 0; r < rows.length; r++) {
+      var row = rows[r];
+      var map = {};
+      var found = 0;
+      keys.forEach(function(key) {
+        var idx = row.indexOf(HEADER_LABELS[key]);
+        if (idx !== -1) { map[key] = idx; found++; }
+      });
+      if (found >= needed) return { colMap: map, dataStartRow: r + 1 };
+    }
+    return null;
+  }
+
+  // Google Form prefill config for "휴가 신청하기" — pre-fills 지점/업무구분/성명/회원번호
+  // so the manager never has to type (or guess) the internal employee name.
+  var FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSelgN-Hr-a0-LPi3PEBwF9SDbO0Nu0OMA6V8a3NswYmmIJ9cw/viewform';
+  var FORM_ENTRY = {
+    branch: 'entry.1230278992',
+    role: 'entry.1061129149',
+    name: 'entry.80286927',
+    memberId: 'entry.1885821175'
+  };
+
+  function buildFormUrl(name, branch, role, memberId) {
+    var params = [];
+    params.push('usp=pp_url');
+    if (branch) params.push(FORM_ENTRY.branch + '=' + encodeURIComponent(branch));
+    if (role) params.push(FORM_ENTRY.role + '=' + encodeURIComponent(role));
+    if (name) params.push(FORM_ENTRY.name + '=' + encodeURIComponent(name));
+    if (memberId) params.push(FORM_ENTRY.memberId + '=' + encodeURIComponent(memberId));
+    return FORM_BASE_URL + '?' + params.join('&');
+  }
+
+  var COL_HIST = {
+    branch: 1, role: 2, name: 3, memberId: 4,
+    startDate: 5, endDate: 6, days: 7, type: 8, note: 9
+  };
+  var HIST_DATA_START_ROW = 1;
+
+  var infoRows = null;
+  var histRows = null;
+
+  document.getElementById('nameInput').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') doSearch();
+  });
+
+  function setStatus(msg) {
+    document.getElementById('status').textContent = msg || '';
+  }
+
+  // headersCount: 이 시트 범위 맨 위 몇 행이 "헤더"인지 (기본 0). 사원정보 탭(GID_INFO)은
+  // 1행이 병합/구분용이고 실제 항목명이 2행에 있어서 headers=2로 요청해야, 데이터가
+  // 숫자/날짜인 컬럼("잔여 월차 수"/"잔여 연차 수"/"입사일"/"퇴사일")의 헤더 텍스트가
+  // 구글 gviz의 타입 변환 버그로 빈 값이 되어버리는 문제를 피할 수 있습니다. 휴가사용내역
+  // 탭(GID_HISTORY)은 고정된 열 번호를 그대로 쓰고 있어서(원래 동작 그대로) headers=0을 씁니다.
+  function fetchSheet(gid, onDone, onError, headersCount) {
+    headersCount = headersCount || 0;
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+
+    var finished = false;
+    var handlerName = 'handler_' + gid;
+
+    var timeoutId = setTimeout(function() {
+      if (!finished) {
+        finished = true;
+        cleanup();
+        onError(new Error('응답 시간이 초과되었습니다. (gid: ' + gid + ')'));
+      }
+    }, 12000);
+
+    function cleanup() {
+      clearTimeout(timeoutId);
+      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+      delete window.google.visualization.Query[handlerName];
+    }
+
+    window.google.visualization.Query[handlerName] = function(resp) {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      try {
+        if (!resp || resp.status === 'error') {
+          var msg = (resp && resp.errors && resp.errors[0] && resp.errors[0].detailed_message) || '시트 응답 오류';
+          throw new Error(msg);
+        }
+        var table = resp.table;
+        var rows = [];
+        if (headersCount > 0) {
+          // headers=2로 요청한 경우: 구글이 헤더 행을 데이터에서 분리해서 각 컬럼의
+          // 실제 항목명을 table.cols[].label로 정확히 돌려줍니다. 이걸 첫 행으로
+          // 만들어 앞에 끼워 넣고, 그 다음부터는 순수 데이터 행만 오도록 합니다.
+          rows.push(table.cols.map(function(c) { return c.label || ''; }));
+        }
+        for (var r = 0; r < table.rows.length; r++) {
+          var cells = table.rows[r].c;
+          var rowArr = [];
+          for (var c = 0; c < cells.length; c++) {
+            var cell = cells[c];
+            if (!cell) { rowArr.push(''); continue; }
+            var val = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
+            rowArr.push(val === null || val === undefined ? '' : String(val));
+          }
+          rows.push(rowArr);
+        }
+        onDone(rows);
+      } catch (e) {
+        onError(e);
+      }
+    };
+
+    var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
+      '/gviz/tq?gid=' + gid + '&headers=' + headersCount + '&tqx=out:json;responseHandler:google.visualization.Query.' + handlerName;
+
+    var scriptEl = document.createElement('script');
+    scriptEl.src = url;
+    scriptEl.onerror = function() {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      onError(new Error('시트를 불러오지 못했습니다. (gid: ' + gid + ') 공유 설정을 확인해주세요.'));
+    };
+    document.body.appendChild(scriptEl);
+  }
+
+  function loadAll(callback, onError) {
+    setStatus('시트에서 데이터를 불러오는 중입니다...');
+    document.getElementById('searchBtn').disabled = true;
+
+    var pending = 2;
+    var failed = false;
+
+    function checkDone() {
+      pending--;
+      if (pending === 0 && !failed) {
+        document.getElementById('searchBtn').disabled = false;
+        document.getElementById('updated').textContent = '마지막 조회: ' + new Date().toLocaleString('ko-KR');
+        callback();
+      }
+    }
+    function fail(err) {
+      if (failed) return;
+      failed = true;
+      document.getElementById('searchBtn').disabled = false;
+      onError(err);
+    }
+
+    fetchSheet(GID_INFO, function(rows) {
+      var header = findHeaderRow_(rows);
+      if (!header) {
+        fail(new Error('시트에서 헤더(항목명) 행을 찾지 못했습니다.'));
+        return;
+      }
+      COL_INFO = header.colMap;
+      INFO_DATA_START_ROW = header.dataStartRow;
+      infoRows = rows.slice(INFO_DATA_START_ROW).filter(function(row) {
+        return row[COL_INFO.name] && row[COL_INFO.name].trim().length > 0;
+      });
+      checkDone();
+    }, fail, 2);
+
+    fetchSheet(GID_HISTORY, function(rows) {
+      histRows = rows.slice(HIST_DATA_START_ROW).filter(function(row) {
+        return row[COL_HIST.name] && row[COL_HIST.name].trim().length > 0 && row[COL_HIST.startDate] && row[COL_HIST.startDate].trim().length > 0;
+      });
+      checkDone();
+    }, fail, 0);
+  }
+
+  function doSearch() {
+    var query = document.getElementById('nameInput').value.trim();
+    document.getElementById('results').innerHTML = '';
+    if (!query) { setStatus('이름 또는 전화번호를 입력해주세요.'); return; }
+
+    if (infoRows && histRows) {
+      setStatus('');
+      renderResults(query);
+    } else {
+      loadAll(
+        function(){ setStatus(''); renderResults(query); },
+        function(err){ setStatus('오류: ' + err.message); }
+      );
+    }
+  }
+
+  function findMatches(rows, nameIdx, query) {
+    var exact = [];
+    for (var i = 0; i < rows.length; i++) {
+      var name = (rows[i][nameIdx] || '').trim();
+      if (name === query) exact.push(rows[i]);
+    }
+    if (exact.length > 0) return exact;
+    var partial = [];
+    for (var j = 0; j < rows.length; j++) {
+      var name2 = (rows[j][nameIdx] || '').trim();
+      if (name2.indexOf(query) !== -1) partial.push(rows[j]);
+    }
+    return partial;
+  }
+
+  function normalizeDigits(s) {
+    return String(s || '').replace(/[^0-9]/g, '');
+  }
+
+  function isPhoneLikeQuery(q) {
+    var digits = normalizeDigits(q);
+    return digits.length >= 4 && digits.length === q.replace(/[\s\-]/g, '').length;
+  }
+
+  function findByPhone(rows, query) {
+    var digits = normalizeDigits(query);
+    var matches = [];
+    for (var i = 0; i < rows.length; i++) {
+      var phone = normalizeDigits(rows[i][COL_INFO.phone]);
+      if (!phone) continue;
+      if (phone === digits || phone.indexOf(digits) !== -1) matches.push(rows[i]);
+    }
+    return matches;
+  }
+
+  function parseDateForSort(s) {
+    var t = Date.parse(s);
+    return isNaN(t) ? 0 : t;
+  }
+
+  function tagClass(type) {
+    var t = (type || '').trim();
+    if (t.indexOf('월차') !== -1) return 'tag-month';
+    if (t.indexOf('연차') !== -1) return 'tag-annual';
+    return 'tag-etc';
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+
+  // 퇴사 판정 (대시보드와 같은 기준): 퇴사일이 오늘 이전/당일이면 퇴사, 오늘 이후이면 "퇴사예정"으로 아직 재직중.
+  // 퇴사일이 비어 있어도 재직상태가 "퇴사"(예정 아님)이면 퇴사로 봅니다.
+  function isResignedRow(r) {
+    var d = parseYMD(r[COL_INFO.resignDate]);
+    if (d) { var t = new Date(); t.setHours(0,0,0,0); return d <= t; }
+    var st = (COL_INFO.employmentStatus !== undefined ? (r[COL_INFO.employmentStatus] || '') : '');
+    return st.indexOf('퇴사') !== -1 && st.indexOf('예정') === -1;
+  }
+  function getMode() {
+    var r = document.querySelector('input[name="mode"]:checked');
+    return r ? r.value : 'active';
+  }
+  function onModeChange() {
+    document.getElementById('results').innerHTML = '';
+    var q = document.getElementById('nameInput').value.trim();
+    if (q && infoRows && histRows) renderResults(q);
+  }
+  function parseYMD(s) {
+    var m = String(s || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    return m ? new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10)) : null;
+  }
+  // 입사일 기준 매월 같은 날이 퇴사일(당일 포함)까지 몇 번 지났는지 (최대 11)
+  function monthlyEarnedUntil(hire, end) {
+    if (!hire || !end || end < hire) return 0;
+    var n = 0;
+    for (var k = 1; k <= 11; k++) {
+      var d = new Date(hire.getFullYear(), hire.getMonth() + k, hire.getDate());
+      if (d.getDate() !== hire.getDate()) d = new Date(hire.getFullYear(), hire.getMonth() + k + 1, 0);
+      if (d <= end) n++; else break;
+    }
+    return n;
+  }
+  // 이름 또는 전화번호로 검색: 숫자만(4자리 이상) 입력하면 전화번호, 그 외에는 이름
+  function findInfoRows(query) {
+    if (isPhoneLikeQuery(query)) return { kind: 'phone', rows: findByPhone(infoRows, query) };
+    var q = query.replace(/\s+/g, '');
+    var exact = [], partial = [];
+    infoRows.forEach(function(r) {
+      var n = String(r[COL_INFO.name] || '').replace(/\s+/g, '');
+      if (!n) return;
+      if (n === q) exact.push(r); else if (n.indexOf(q) !== -1) partial.push(r);
+    });
+    return { kind: 'name', rows: exact.length ? exact : partial };
+  }
+
+  function renderResults(query) {
+    var container = document.getElementById('results');
+    var mode = getMode();
+
+    var found = findInfoRows(query);
+    var phoneMatches = found.rows;
+
+    // 재직자: 퇴사일이 비어 있는 기록만 (재입사자는 이전 기록이 퇴사 처리되어 있으므로 구분됨)
+    // 퇴사자: 퇴사일이 있는 기록만
+    var activeMatches = phoneMatches.filter(function(r) {
+      var resigned = isResignedRow(r);
+      return mode === 'resigned' ? resigned : !resigned;
+    });
+    var what = found.kind === 'phone' ? '전화번호' : '이름';
+    var withJosa = found.kind === 'phone' ? '전화번호로' : '이름으로';
+
+    if (activeMatches.length === 0) {
+      if (phoneMatches.length > 0) {
+        container.innerHTML = mode === 'resigned'
+          ? '<div class="empty">해당 ' + what + '의 퇴사 기록이 없습니다. (재직 중인 기록만 있습니다)</div>'
+          : '<div class="empty">해당 ' + withJosa + ' 재직 중인 기록을 찾을 수 없습니다. [퇴사자]를 선택해 조회해보세요.</div>';
+      } else {
+        container.innerHTML = '<div class="empty">해당 ' + what + '을(를) 찾을 수 없습니다. 다시 확인해주세요.</div>';
+      }
+      return;
+    }
+
+    lastBlocks = [];
+    var html = '';
+    activeMatches.forEach(function(info) {
+      var memberId = (info[COL_INFO.memberId] || '').trim();
+      var name = info[COL_INFO.name].trim();
+      var branch = info[COL_INFO.branch];
+
+      // Bridge to history via 회원번호 (member ID) when available.
+      var hist;
+      if (memberId) {
+        hist = histRows.filter(function(r){ return (r[COL_HIST.memberId] || '').trim() === memberId; });
+      } else {
+        hist = histRows.filter(function(r){ return r[COL_HIST.name].trim() === name; });
+      }
+
+      // Only show usage on/after the (latest) hire date on file — keeps pre-rehire
+      // history out of view for employees whose 입사일 was updated on re-hire.
+      var hireDateStr = info[COL_INFO.hireDate];
+      var hireDateMs = hireDateStr ? Date.parse(hireDateStr) : NaN;
+      if (!isNaN(hireDateMs)) {
+        hist = hist.filter(function(r) {
+          var d = Date.parse(r[COL_HIST.startDate]);
+          return isNaN(d) ? true : d >= hireDateMs;
+        });
+      }
+
+      if (mode === 'resigned') {
+        var rdate = parseYMD(info[COL_INFO.resignDate]);
+        if (rdate) hist = hist.filter(function(r){ var d = parseYMD(r[COL_HIST.startDate]); return !d || d <= rdate; });
+      }
+      html += renderEmployeeBlock(name, branch, memberId, info, hist, mode === 'resigned', found.kind === 'name');
+    });
+
+    html = '<button type="button" onclick="downloadResult()" style="background:#fff; color:var(--accent); border:1px solid var(--accent); margin-top:14px;">⬇ 엑셀 다운로드 (조회한 내용)</button>' + html;
+    container.innerHTML = html;
+  }
+
+  var lastBlocks = [];
+  function downloadResult() {
+    if (!lastBlocks.length) { alert('내려받을 조회 결과가 없습니다.'); return; }
+    if (typeof XLSX === 'undefined') { alert('엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
+    var sum = [['이름','지점','업무구분','재직구분','연락처','입사일','퇴사일','잔여 월차','잔여 연차','비고']];
+    var det = [['이름','지점','번호','시작일','종료일','일수','종류','비고']];
+    lastBlocks.forEach(function(b) {
+      sum.push([b.name, b.branch, b.role, b.resigned ? '퇴사' : (b.resignPlan ? '재직(퇴사예정)' : '재직'), b.phone, b.hireDate, b.resignDate, b.monthly, b.annual, b.note]);
+      b.hist.forEach(function(row, i) {
+        det.push([b.name, b.branch, i + 1, row[COL_HIST.startDate] || '', row[COL_HIST.endDate] || '', row[COL_HIST.days] || '', row[COL_HIST.type] || '', row[COL_HIST.note] || '']);
+      });
+    });
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(sum), '잔여휴가');
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(det), '휴가사용내역');
+    var who = lastBlocks.length === 1 ? lastBlocks[0].name : '조회결과';
+    XLSX.writeFile(wb, '휴가조회_' + who + '_' + new Date().toISOString().slice(0, 10) + '.xlsx');
+  }
+
+  function renderEmployeeList(infoMatches, container, showAsButtons) {
+    var html = '<div style="margin-top:10px;">';
+    infoMatches.forEach(function(info) {
+      var name = info[COL_INFO.name];
+      var branch = info[COL_INFO.branch];
+      var phone = info[COL_INFO.phone];
+      html += '<div style="padding:10px; border:1px solid var(--line); border-radius:10px; margin-top:8px; font-size:13.5px;">';
+      html += '<b>' + escapeHtml(name) + '</b> (' + escapeHtml(branch || '') + ') — ' + escapeHtml(phone || '전화번호 없음');
+      html += '</div>';
+    });
+    html += '</div>';
+    container.innerHTML += html;
+  }
+
+  function renderEmployeeBlock(name, branch, memberId, info, hist, isResigned, showPhoneTail) {
+    var html = '';
+    html += '<div class="name-header"><span class="name">' + escapeHtml(name) + '</span>';
+    if (branch) html += '<span class="branch">' + escapeHtml(branch) + '</span>';
+    html += '</div>';
+    if (showPhoneTail) {
+      var tail = normalizeDigits(info[COL_INFO.phone]).slice(-4);
+      if (tail) html += '<div class="meta">연락처 끝 4자리: ' + tail + ' (동명이인 구분용)</div>';
+    }
+
+    var role = info[COL_INFO.role] || '';
+    if (isResigned) {
+      html += '<div class="meta" style="color:var(--warn); font-weight:700;">퇴사자 · 퇴사일 ' + escapeHtml(info[COL_INFO.resignDate] || '') + '</div>';
+    } else {
+      var formUrl = buildFormUrl(name, branch, role, memberId);
+      html += '<a href="' + formUrl + '" target="_blank" rel="noopener" style="display:block; text-decoration:none;">';
+      html += '<button type="button" style="background:var(--warn); border-color:var(--warn);">휴가 신청하기</button>';
+      html += '</a>';
+    }
+
+    html += '<div class="section-title">잔여 휴가</div>';
+    var hireDate = info[COL_INFO.hireDate] || '';
+    var monthly = info[COL_INFO.monthly] || '0';
+    var annual = info[COL_INFO.annual] || '0';
+    var frozenNote = '';
+    if (isResigned) {
+      var hd = parseYMD(hireDate), rd2 = parseYMD(info[COL_INFO.resignDate]);
+      var usedM = 0;
+      hist.forEach(function(row){ if ((row[COL_HIST.type]||'').indexOf('월차') !== -1) usedM += parseFloat(row[COL_HIST.days]) || 0; });
+      var earned = monthlyEarnedUntil(hd, rd2);
+      monthly = String(Math.max(0, earned - usedM));
+      var oneYear = hd ? new Date(hd.getFullYear() + 1, hd.getMonth(), hd.getDate()) : null;
+      var under1 = !!(rd2 && oneYear && rd2 < oneYear);
+      if (under1) annual = '0';
+      frozenNote = '<div class="meta">퇴사일(' + escapeHtml(info[COL_INFO.resignDate] || '') + ') 기준 · 월차 발생 ' + earned + '개 − 사용 ' + usedM + '개' + (under1 ? '' : ' · 연차는 시트 값 기준') + '</div>';
+    }
+    html += '<div class="stat-grid">';
+    html += '<div class="stat"><div class="label">잔여 월차</div><div class="value">' + escapeHtml(monthly) + '</div></div>';
+    html += '<div class="stat"><div class="label">잔여 연차</div><div class="value">' + escapeHtml(annual) + '</div></div>';
+    html += '</div>';
+    if (hireDate) html += '<div class="meta">입사일: ' + escapeHtml(hireDate) + '</div>';
+    html += frozenNote;
+
+    html += '<div class="section-title">휴가 사용 내역</div>';
+    if (hist.length > 0) {
+      hist.sort(function(a, b) {
+        return parseDateForSort(b[COL_HIST.startDate]) - parseDateForSort(a[COL_HIST.startDate]);
+      });
+      var totalMonthly = 0, totalAnnual = 0;
+      hist.forEach(function(row) {
+        var d = parseFloat(row[COL_HIST.days]) || 0;
+        var t = (row[COL_HIST.type] || '').trim();
+        if (t.indexOf('월차') !== -1) totalMonthly += d;
+        else if (t.indexOf('연차') !== -1) totalAnnual += d;
+      });
+
+      html += '<div class="summary-row">';
+      html += '<div class="summary"><div class="label">월차 사용</div><div class="value">' + totalMonthly + '</div></div>';
+      html += '<div class="summary"><div class="label">연차 사용</div><div class="value">' + totalAnnual + '</div></div>';
+      html += '</div>';
+
+      html += '<div class="table-scroll"><table><thead><tr>';
+      html += '<th>번호</th><th>시작일</th><th>종료일</th><th>일수</th><th>종류</th><th>비고</th>';
+      html += '</tr></thead><tbody>';
+      hist.forEach(function(row, i) {
+        html += '<tr>';
+        html += '<td>' + (i + 1) + '</td>';
+        html += '<td>' + escapeHtml(row[COL_HIST.startDate] || '') + '</td>';
+        html += '<td>' + escapeHtml(row[COL_HIST.endDate] || '') + '</td>';
+        html += '<td>' + escapeHtml(row[COL_HIST.days] || '') + '</td>';
+        html += '<td><span class="tag ' + tagClass(row[COL_HIST.type]) + '">' + escapeHtml(row[COL_HIST.type] || '') + '</span></td>';
+        html += '<td class="note">' + escapeHtml(row[COL_HIST.note] || '') + '</td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+    } else {
+      html += '<div class="empty" style="margin-top:0;">사용 내역이 없습니다.</div>';
+    }
+
+    var plan = parseYMD(info[COL_INFO.resignDate]);
+    if (!isResigned && plan) html += '<div class="meta" style="color:var(--warn); font-weight:700;">퇴사예정 ' + escapeHtml(info[COL_INFO.resignDate] || '') + ' (현재 재직중)</div>';
+    lastBlocks.push({
+      name: name, branch: branch || '', role: role, phone: info[COL_INFO.phone] || '', hireDate: hireDate,
+      resignDate: info[COL_INFO.resignDate] || '', resigned: !!isResigned, resignPlan: !isResigned && !!plan,
+      monthly: monthly, annual: annual,
+      note: frozenNote ? frozenNote.replace(/<[^>]+>/g, '') : '', hist: hist
+    });
+    html += '<hr class="divider">';
+    return html;
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="data:image/png;base64,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xZlnnhm33nprPPHEE/Htb387tt9++9Sx6AQFgC4bNWpUl286qpLevXvH8OHDU8eAZPr27Rvf+ta3YtasWfGrX/0q9txzz9SRqIECQJf17ds3hg0bljpGcqeddlr06dMndQxIrlevXjFixIj429/+FtOmTYuPfOQjqSOxCQoAdcn9xre2trY4++yzU8eAQmlra4ujjjoqZsyYEb/85S9dGigoBYC6HHDAAbHPPvukjpHMJz/5ydhjjz1Sx4BC6tatW5xxxhnx8MMPx1e+8hWXDAtGAaBuOe8C5PzZoVZ9+vSJH/7wh3HvvffGXnvtlToO/08BoG4nnHBCbLvttqljtFz//v3j6KOPTh0DSmPPPfeMu+++2xNEBaEAULf29vYYOXJk6hgtN3bsWM8/Qyf16tUrfvGLX8Tll18eW2+9deo4WfOnFw1x1llnRffu3VPHaJktt9wyTj/99NQxoLSGDRsWM2fOjN122y11lGwpADTEe9/73vjsZz+bOkbLnHLKKc5eoE79+/eP6dOnx4c//OHUUbKkANAwOd0Q59E/aIwddtghbr/99jj44INTR8mOAkDDDB48OIs7fA8//PD40Ic+lDoGVMZWW20VN954YxxxxBGpo2RFAaChcjgzzmmnA1qlo6MjrrzySm8PbCEFgIY6+eSTK31tfJdddoljjjkmdQyopC233DJ+97vfRb9+/VJHyYICQENV/e74MWPGePQPmminnXaKa6+9Njo6OlJHqTx/ktFwVR2SW2yxRYwYMSJ1DKi8ffbZJyZMmJA6RuVV709pktt1113jqKOOSh2j4U4++eTYZpttUseALAwbNiw+//nPp45RaQoATVHFmwGr+JmgyH7605/GDjvskDpGZSkANMURRxwRAwYMSB2jYQYPHhwDBw5MHQOy8p73vCcuuOCC1DEqSwGgKdra2mLMmDGpYzSMR/8gjaFDh8bQoUNTx6gkBYCmGT58ePTu3Tt1jLrl9ppjKJrvf//7WX3XSKsoADRNnz594tRTT00do25jxozxhw8ktPvuu8dJJ52UOkblKAA01dixY1NHqEuvXr3ijDPOSB0DsvfNb35TEW8wBYCm2nPPPePwww9PHaPLTjrppNh2221Tx4DsDRgwIE444YTUMSqlR+oAVN8555wTf/zjH1PH6BKP/lGPffbZJ2bPnt2Un92rV69ob2+P3r17R9++faNfv37Rv3//GDhwYAwcODAGDRpUuTPm8847L66++urUMSpDAaDpPv3pT8f73//++Pe//506SqcccsghvpiEwlq2bFksW7YsFi5cGC+88MI7/vett946DjvssBg6dGgce+yxseWWWyZI2Vjrys0jjzySOkoluARA03Xv3r2UjwQ6+6fMFi5cGDfddFOceeaZseuuu8Z5550Xzz//fOpYdTvllFNSR6gMBYCWOOOMM2KLLbZIHaNmO+20UwwZMiR1DGiIJUuWxPjx42PgwIFx/vnnx5IlS1JH6rITTzyxkt81koKjSEtss802ceKJJ6aOUbOzzjorevRwhYxqWblyZVx00UWx3377xcyZM1PH6ZKdd945Dj300NQxKkEBoGXK8ja99vb2GDlyZOoY0DTPP/98HHPMMTF+/PjUUbrkuOOOSx2hEhQAWmbQoEFx8MEHp46xWccff3xsv/32qWNAU61atSrOO++8+NnPfpY6Sqd9/OMfTx2hEhQAWqoMN9aVZacCGuG73/1uTJo0KXWMThk4cGBstdVWqWOUngJASw0ZMiT69euXOsZGHXjggbHvvvumjgEt9bWvfS3uv//+1DFq1q1btzjooINSxyg9BYCW6tmzZ5x55pmpY2xUGXYooNFWrFgRY8aMiRUrVqSOUjOXAeqnANByZ555ZrzrXe9KHeMddtxxxxg2bFjqGJDE7Nmz46KLLkodo2YHHnhg6gilpwDQcjvssEMhB+3o0aOjZ8+eqWNAMj//+c9j6dKlqWPUZLfddksdofQUAJIo2lb7u971rhg1alTqGJDUggUL4vLLL08doyb9+vWL9vb21DFKTQHIXKr38x9wwAGFutlu2LBh0bdv3yRrP/vss0nWhQ0py5fttLW1xS677JI6RqkpAJmbMGFCsrWLtAuQ8tG/lL8D+F9//etf48UXX0wdoya77rpr6gilpgBk7sorr4xFixYlWfuEE06I7bbbLsna69tvv/1i//33T7L2vHnz4vrrr0+yNmzI2rVrY8aMGalj1KR///6pI5SaApC5119/PaZMmZJk7aK8cvcLX/hCsrUvvvjiWLlyZbL1YUPuu+++1BFq4o2d9VEAiPHjx8fatWuTrD169Ojo3r17krUj3vwD5HOf+1yStVeuXBmXXHJJkrVhUx599NHUEWrS0dGROkKpKQDEk08+GXfccUeStd/73vfGsccem2TtiLTvJJg2bVrMmzcvydqwKaluDu6sLbfcMnWEUlMAiIiIX/3qV8nWTnUzYM+ePWP06NFJ1o6I+PWvf51sbdiU559/PnWEmigA9VEAiIiI6dOnx5w5c5KsPXjw4Nh7771bvu7QoUOTfS/BAw88UJrrrORnxYoVsWrVqtQxNsslgPooAETEm3f+5vZIYMrHEJ39U3RleCOgHYD6KAC8ZcqUKbFkyZIka5988smx9dZbt2y9j370o8m+TeyVV16JqVOnJlkbatWtW/HHQ6qbl6ui+L9hWmbx4sVxxRVXJFm7o6MjRowY0bL1Uj76N2nSpFi+fHmy9aEWvXr1Sh1hs15//fXUEUpNAeBtxo0bl6xVjxkzpiVnHdtuu22ccMIJTV9nQ1atWhUTJ05MsjbUqlevXtGjR4/UMTarDJcpikwB4G1mz54dd911V5K1+/fvH0cddVTT1xk1alSyLxG54YYbYu7cuUnWhlq9733vSx2hJnYA6qMA8A4pb1Br9jv5e/ToEWeddVZT19iUcePGJVsbalWWAmAHoD4KAO9w2223xdNPP51k7U996lMxYMCApv384447Lnbeeeem/fxNeeihh+Kee+5JsjZ0xsCBA1NHqIkCUB8FgHdYs2ZNskcC29raYsyYMU37+R79g8078MADU0eoiTdp1kcBYIMuu+yyZNfXhg8fHr179274z/3whz8cH//4xxv+c2uxYMGCuPbaa5OsDZ3RvXv3OPTQQ1PHqMlTTz2VOkKpKQBs0MKFC+Oqq65KsnafPn3itNNOa/jPbfb9BZvym9/8Jt54441k60OtDj300EJ8TXctnnnmmdQRSk0BYKNS3rA2duzYhv68bbbZJk466aSG/sxarV692qN/lMapp56aOkJN1qxZE88++2zqGKWmALBRjz76aPz5z39OsvYHP/jB+MQnPtGwnzdy5MjYYostGvbzOuOWW24pzberkbcdd9wxWVHurLlz58aKFStSxyg1BYBNSnnjWqNu2OvevXvSR//c/EdZfOMb30j29did9eSTT6aOUHoKAJt0yy23xHPPPZdk7WOOOSZ22WWXun/OZz7zmXj/+9/fgESd99hjjyXbRYHOGDRoUNKi3Fn33ntv6gilpwCwSatXr072SGC3bt0a8khgypv/nP1TBh0dHTFx4sTo3r176ig1mzlzZuoI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">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>잔여휴가 모아보기</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --ink: #4a3f5c;
+    --paper: #fdf6fb;
+    --line: #ecdcf0;
+    --accent: #8e6fc4;
+    --accent-soft: #f1e8fb;
+    --warn: #d6748c;
+    --muted: #8b7f99;
+    --muted2: #c6b6da;
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); padding: 40px 20px 80px;
+    font-size: 16px;
+  }
+  @media (max-width: 480px) {
+    body { padding: 22px 16px 64px; }
+    table { font-size: 13.5px; }
+    thead th, tbody td { padding: 8px 10px; }
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 800; margin: 0 0 6px; text-align: center; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0 0 20px; text-align: center; }
+
+  .panel {
+    background: #fff; border: 1px solid var(--line); border-radius: 18px;
+    padding: 20px; box-shadow: 0 3px 12px rgba(142,111,196,0.08); margin-bottom: 18px;
+  }
+  .controls { display: flex; gap: 8px; }
+  input[type=text] {
+    flex: 1; font-size: 16px; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: #fdf9fe; color: var(--ink);
+  }
+  input[type=text]:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  select {
+    font-size: 15px; padding: 12px 12px; border: 1px solid var(--line);
+    border-radius: 12px; background: #fdf9fe; color: var(--ink); font-family: var(--sans);
+  }
+  select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .tab-row { display: flex; gap: 8px; }
+  .tab-btn {
+    flex: 1; font-family: var(--sans); font-size: 15px; font-weight: 700;
+    padding: 12px; border-radius: 12px; border: 1px solid var(--line);
+    background: #fdf9fe; color: var(--ink); cursor: pointer;
+  }
+  .tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .branch-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .branch-btn {
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
+    padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fdf9fe; color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .branch-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .role-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .role-btn {
+    font-family: var(--sans); font-size: 13px; font-weight: 700;
+    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fdf9fe; color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .role-btn.active { background: var(--warn); border-color: var(--warn); color: #fff; }
+
+  .toolbar-row { display: flex; justify-content: flex-end; margin: 12px 0 0; }
+  .excel-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--sans); font-size: 13.5px; font-weight: 700;
+    padding: 9px 16px; border-radius: 999px; border: none;
+    background: #3fa66a; color: #fff; cursor: pointer;
+  }
+  .excel-btn:hover { background: #35915c; }
+  .excel-btn:disabled { background: var(--muted2); cursor: not-allowed; }
+
+  .status { font-size: 14px; color: var(--warn); text-align: center; margin: 12px 0; min-height: 18px; }
+  .count { font-size: 13.5px; color: var(--muted); margin: 4px 2px 0; text-align: center; }
+  .empty { color: var(--muted2); font-size: 15px; text-align: center; margin-top: 24px; }
+
+  .table-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  thead th {
+    background: var(--accent-soft); color: var(--accent); text-align: left;
+    padding: 10px 12px; border-bottom: 2px solid var(--accent); font-weight: 700; white-space: nowrap;
+  }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; white-space: nowrap; }
+  tbody tr:nth-child(even) { background: #faf3fb; }
+
+  .annual-badge {
+    display: inline-block; padding: 3px 11px; border-radius: 14px;
+    font-size: 13px; font-weight: 800; background: var(--accent-soft); color: var(--accent);
+  }
+  .monthly-badge {
+    display: inline-block; padding: 3px 11px; border-radius: 14px;
+    font-size: 13px; font-weight: 800; background: #fbe4ec; color: var(--warn);
+  }
+
+  .office-group { margin-top: 22px; }
+  .office-group:first-of-type { margin-top: 6px; }
+  .office-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    padding: 11px 13px; background: var(--accent-soft); border-radius: 10px 10px 0 0;
+  }
+  .office-name { font-size: 16px; font-weight: 800; color: var(--accent); }
+  .office-total { font-size: 13.5px; font-weight: 700; color: var(--accent); }
+
+  .updated { text-align: center; font-size: 12.5px; color: var(--muted2); margin-top: 20px; }
+
+  .back-home {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; box-sizing: border-box;
+    padding: 13px; margin: 0 0 20px;
+    border: 1px solid var(--line); border-radius: 14px;
+    background: #fff; color: var(--accent);
+    font-size: 15px; font-weight: 700; text-decoration: none;
+    box-shadow: 0 3px 10px rgba(142,111,196,0.08);
+  }
+  .back-home:hover { background: var(--accent-soft); }
+
+  /* ---- PC(데스크톱) 화면에서는 더 넓은 레이아웃으로 ---- */
+  @media (min-width: 1024px) {
+    .wrap { max-width: 1000px; }
+    h1 { font-size: 32px; }
+    .sub { font-size: 17px; }
+    .panel { padding: 24px; }
+    input[type=text] { font-size: 17px; padding: 13px 15px; }
+    select { font-size: 15.5px; padding: 13px; }
+    .branch-btn { font-size: 14.5px; padding: 10px 18px; }
+    .status { font-size: 15px; }
+    .count { font-size: 14.5px; }
+    .empty { font-size: 16px; }
+    table { font-size: 15.5px; }
+    thead th, tbody td { padding: 12px 15px; }
+    .annual-badge, .monthly-badge { font-size: 13.5px; padding: 4px 12px; }
+    .office-name { font-size: 17.5px; }
+    .office-total { font-size: 14.5px; }
+    .back-home { padding: 14px; border-radius: 14px; font-size: 15.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-home" href="index.html">‹ 매니저 관리 시스템으로 돌아가기</a>
+  <h1>잔여휴가 모아보기</h1>
+  <p class="sub">지점별로 매니저의 잔여 월차·연차를 보여줍니다. (기본은 재직자, 퇴사자는 퇴사일 기준 잔여) (건수제·프리랜서 매니저는 휴가가 생성되지 않아 제외됩니다)</p>
+
+  <div class="panel">
+    <div class="controls">
+      <select id="statusFilter" onchange="render()" style="font-size:15px; padding:11px; border:1px solid var(--line); border-radius:12px; background:#fff; margin-bottom:8px; width:100%;">
+        <option value="active">재직자</option><option value="all">전체</option><option value="resigned">퇴사자</option>
+      </select>
+      <input type="text" id="searchInput" placeholder="이름 또는 전화번호로 검색" autocomplete="off">
+    </div>
+    <div class="branch-row" id="branchRow">
+      <button type="button" class="branch-btn active" data-office="" onclick="selectOffice('')">전체</button>
+    </div>
+    <div class="role-row" id="roleRow">
+      <button type="button" class="role-btn active" data-role="" onclick="selectRole('')">전체</button>
+    </div>
+    <div class="toolbar-row">
+      <button type="button" class="excel-btn" id="excelBtn" onclick="downloadExcel()">⬇ 엑셀 다운로드</button>
+    </div>
+    <div class="status" id="status">불러오는 중입니다...</div>
+    <div class="count" id="count"></div>
+  </div>
+
+  <div id="results"></div>
+  <div class="updated" id="updated"></div>
+</div>
+
+<script>
+  var SHEET_ID = '1X3LpMT3fl7AoIPPPNwces5UK4-uWxEkuDBkRX6BWvAE';
+  var GID_INFO = '578655642'; // 사원정보 탭
+
+  // 헤더 이름으로 컬럼 위치를 자동으로 찾습니다. 시트에 컬럼이 추가/삭제/이동되어도
+  // 이 코드를 매번 고치지 않도록, 고정된 열 번호 대신 시트의 실제 헤더(항목명)
+  // 텍스트를 기준으로 위치를 찾습니다. 헤더 행 자체도 고정된 행 번호가 아니라,
+  // 아래 HEADER_LABELS 항목들이 가장 많이 일치하는 행을 헤더 행으로 자동 인식합니다.
+  // (참고: 이 시트는 1행이 별도 용도이고, 실제 항목명은 2행에 있습니다.)
+  var HEADER_LABELS = {
+    memberId: '회원번호', branch: '지점', role: '업무구분', name: '직원명',
+    hireDate: '입사일', resignDate: '퇴사일', employmentStatus: '재직상태',
+    phone: '연락처', monthly: '잔여 월차 수', annual: '잔여 연차 수'
+  };
+  var COL_INFO = null;         // findHeaderRow_()가 채웁니다.
+  var INFO_DATA_START_ROW = 0; // findHeaderRow_()가 채웁니다.
+
+  // rows 안에서 헤더 행을 찾아 { colMap: {필드명: 열 번호}, dataStartRow: 숫자 }를
+  // 반환합니다. HEADER_LABELS 중 절반 이상이 일치하는 첫 번째 행을 헤더 행으로
+  // 인정합니다. 못 찾으면 null을 반환합니다.
+  function findHeaderRow_(rows) {
+    var keys = Object.keys(HEADER_LABELS);
+    var needed = Math.ceil(keys.length / 2);
+    for (var r = 0; r < rows.length; r++) {
+      var row = rows[r];
+      var map = {};
+      var found = 0;
+      keys.forEach(function(key) {
+        var idx = row.indexOf(HEADER_LABELS[key]);
+        if (idx !== -1) { map[key] = idx; found++; }
+      });
+      if (found >= needed) return { colMap: map, dataStartRow: r + 1 };
+    }
+    return null;
+  }
+
+  var allRows = [];
+  var GID_HISTORY = '628017033'; // 휴가사용내역 탭 (퇴사자 잔여 계산용, 고정 열)
+  var COL_HIST = { memberId: 4, name: 3, startDate: 5, days: 7, type: 8 };
+  var histRows = [];
+
+  function parseYMD(s) {
+    var m = String(s || '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    return m ? new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10)) : null;
+  }
+  function monthlyEarnedUntil(hire, end) {
+    if (!hire || !end || end < hire) return 0;
+    var n = 0;
+    for (var k = 1; k <= 11; k++) {
+      var d = new Date(hire.getFullYear(), hire.getMonth() + k, hire.getDate());
+      if (d.getDate() !== hire.getDate()) d = new Date(hire.getFullYear(), hire.getMonth() + k + 1, 0);
+      if (d <= end) n++; else break;
+    }
+    return n;
+  }
+  // 대시보드와 같은 기준: 퇴사일이 오늘 이전/당일이면 퇴사, 오늘 이후(퇴사예정)는 아직 재직중.
+  function isResigned(r) {
+    var d = parseYMD(r[COL_INFO.resignDate]);
+    if (d) { var t = new Date(); t.setHours(0,0,0,0); return d <= t; }
+    var st = (COL_INFO.employmentStatus !== undefined ? (r[COL_INFO.employmentStatus] || '') : '');
+    return st.indexOf('퇴사') !== -1 && st.indexOf('예정') === -1;
+  }
+  // 퇴사자는 퇴사일 기준으로 고정된 잔여를 계산합니다 (월차 발생 − 사용, 1년 미만이면 연차 0).
+  function balanceOf(r) {
+    if (!isResigned(r)) return { monthly: r[COL_INFO.monthly] || '0', annual: r[COL_INFO.annual] || '0' };
+    var hd = parseYMD(r[COL_INFO.hireDate]), rd = parseYMD(r[COL_INFO.resignDate]);
+    var id = (r[COL_INFO.memberId] || '').trim(), name = (r[COL_INFO.name] || '').trim();
+    var used = 0;
+    histRows.forEach(function(h) {
+      var same = id ? (h[COL_HIST.memberId] || '').trim() === id : (h[COL_HIST.name] || '').trim() === name;
+      if (!same || (h[COL_HIST.type] || '').indexOf('월차') === -1) return;
+      var d = parseYMD(h[COL_HIST.startDate]);
+      if (d && ((hd && d < hd) || (rd && d > rd))) return;
+      used += parseFloat(h[COL_HIST.days]) || 0;
+    });
+    var oneYear = hd ? new Date(hd.getFullYear() + 1, hd.getMonth(), hd.getDate()) : null;
+    var under1 = !!(rd && oneYear && rd < oneYear);
+    return { monthly: String(Math.max(0, monthlyEarnedUntil(hd, rd) - used)), annual: under1 ? '0' : (r[COL_INFO.annual] || '0') };
+  }
+  var selectedOffice = '';
+  var selectedRole = '';
+
+  // 지점명에 괄호가 있으면("광주(전주)") 괄호 앞부분을 대표 지점명으로 사용합니다.
+  // 지점 버튼은 이 대표 이름 기준으로 중복 없이 하나만 만들고, 그 버튼을 누르면
+  // 괄호 안 표기를 포함한 모든 관련 행이 함께 보입니다. (표/엑셀에는 원본 텍스트 그대로 표시)
+  function branchLabel(raw) {
+    var s = (raw || '').trim();
+    var idx = s.indexOf('(');
+    return idx === -1 ? s : s.slice(0, idx).trim();
+  }
+
+  function setStatus(msg) { document.getElementById('status').textContent = msg || ''; }
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function fetchSheet(gid, onDone, onError, headersCount) {
+    if (headersCount === undefined) headersCount = 2;
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+
+    var finished = false;
+    var handlerName = 'handler_' + gid;
+
+    var timeoutId = setTimeout(function() {
+      if (!finished) { finished = true; cleanup(); onError(new Error('응답 시간이 초과되었습니다.')); }
+    }, 15000);
+
+    function cleanup() {
+      clearTimeout(timeoutId);
+      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+      delete window.google.visualization.Query[handlerName];
+    }
+
+    window.google.visualization.Query[handlerName] = function(resp) {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      try {
+        if (!resp || resp.status === 'error') {
+          var msg = (resp && resp.errors && resp.errors[0] && resp.errors[0].detailed_message) || '시트 응답 오류';
+          throw new Error(msg);
+        }
+        var table = resp.table;
+        // 이 시트는 1행이 병합/구분용, 실제 항목명은 2행에 있습니다. headers=2로 요청하면
+        // 구글이 1~2행을 "헤더"로 인식해서 각 컬럼의 실제 항목명을 table.cols[].label로
+        // 정확히 돌려줍니다 (헤더=0으로 받으면, 아래 데이터가 숫자/날짜인 컬럼은 헤더의
+        // 텍스트가 숫자로 변환되지 않아 빈 값으로 잘려나가는 문제가 있었습니다. 예:
+        // "잔여 월차 수"/"잔여 연차 수" 같은 헤더가 사라져서 항상 0으로 표시됨).
+        // 그래서 cols[].label을 첫 행으로 만들어 앞에 끼워 넣고, 그 다음부터는
+        // 순수 데이터 행만 오도록 합니다.
+        var rows = [];
+        if (headersCount > 0) rows.push(table.cols.map(function(c) { return c.label || ''; }));
+        for (var r = 0; r < table.rows.length; r++) {
+          var cells = table.rows[r].c;
+          var rowArr = [];
+          for (var c = 0; c < cells.length; c++) {
+            var cell = cells[c];
+            if (!cell) { rowArr.push(''); continue; }
+            var val = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
+            rowArr.push(val === null || val === undefined ? '' : String(val));
+          }
+          rows.push(rowArr);
+        }
+        onDone(rows);
+      } catch (e) { onError(e); }
+    };
+
+    var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
+      '/gviz/tq?gid=' + gid + '&headers=' + headersCount + '&tqx=out:json;responseHandler:google.visualization.Query.' + handlerName;
+
+    var scriptEl = document.createElement('script');
+    scriptEl.src = url;
+    scriptEl.onerror = function() {
+      if (finished) return;
+      finished = true; cleanup();
+      onError(new Error('시트를 불러오지 못했습니다.'));
+    };
+    document.body.appendChild(scriptEl);
+  }
+
+  function populateOfficeFilter() {
+    var offices = {};
+    allRows.forEach(function(r) {
+      var o = branchLabel(r[COL_INFO.branch]);
+      if (o) offices[o] = true;
+    });
+    var row = document.getElementById('branchRow');
+    Object.keys(offices).sort(function(a, b) { return a.localeCompare(b, 'ko'); }).forEach(function(o) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'branch-btn';
+      btn.setAttribute('data-office', o);
+      btn.textContent = o;
+      btn.onclick = function() { selectOffice(o); };
+      row.appendChild(btn);
+    });
+  }
+
+  function selectOffice(office) {
+    selectedOffice = office;
+    document.querySelectorAll('.branch-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-office') === office);
+    });
+    selectedRole = '';
+    populateRoleFilter();
+    render();
+  }
+
+  function populateRoleFilter() {
+    var row = document.getElementById('roleRow');
+    row.innerHTML = '<button type="button" class="role-btn active" data-role="" onclick="selectRole(\'\')">전체</button>';
+    var roles = {};
+    allRows.forEach(function(r) {
+      if (selectedOffice && branchLabel(r[COL_INFO.branch]) !== selectedOffice) return;
+      var role = (r[COL_INFO.role] || '').trim();
+      if (role) roles[role] = true;
+    });
+    Object.keys(roles).sort().forEach(function(role) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'role-btn';
+      btn.setAttribute('data-role', role);
+      btn.textContent = role;
+      btn.onclick = function() { selectRole(role); };
+      row.appendChild(btn);
+    });
+  }
+
+  function selectRole(role) {
+    selectedRole = role;
+    document.querySelectorAll('.role-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
+    });
+    render();
+  }
+
+  function getFilteredRows() {
+    var q = document.getElementById('searchInput').value.trim();
+    var qDigits = q.replace(/[^0-9]/g, '');
+
+    return allRows.filter(function(r) {
+      var hasPhone = (r[COL_INFO.phone] || '').trim().length > 0;
+      var role = (r[COL_INFO.role] || '').trim();
+      var isFreelanceType = role.indexOf('건수') !== -1 || role.indexOf('프리랜서') !== -1;
+      if (!hasPhone || isFreelanceType) return false;
+      var sf = document.getElementById('statusFilter').value;
+      if (sf !== 'all' && (sf === 'resigned') !== isResigned(r)) return false;
+      if (selectedOffice && branchLabel(r[COL_INFO.branch]) !== selectedOffice) return false;
+      if (selectedRole && role !== selectedRole) return false;
+      if (q) {
+        var name = r[COL_INFO.name] || '';
+        var phone = r[COL_INFO.phone] || '';
+        var nameMatch = name.indexOf(q) !== -1;
+        var phoneMatch = qDigits.length > 0 && phone.replace(/[^0-9]/g, '').indexOf(qDigits) !== -1;
+        if (!nameMatch && !phoneMatch) return false;
+      }
+      return true;
+    });
+  }
+
+  function render() {
+    var container = document.getElementById('results');
+
+    var matches = getFilteredRows();
+
+    document.getElementById('count').textContent = '총 ' + matches.length + '명';
+
+    if (matches.length === 0) {
+      container.innerHTML = '<div class="empty">해당하는 매니저가 없습니다.</div>';
+      return;
+    }
+
+    // Group by office (지점), preserving a sorted group order.
+    var groups = {};
+    var groupOrder = [];
+    matches.forEach(function(r) {
+      var office = (r[COL_INFO.branch] || '').trim() || '지점 미상';
+      if (!groups[office]) { groups[office] = []; groupOrder.push(office); }
+      groups[office].push(r);
+    });
+    groupOrder.sort();
+    groupOrder.forEach(function(office) {
+      groups[office].sort(function(a, b) {
+        return (a[COL_INFO.name] || '').localeCompare(b[COL_INFO.name] || '');
+      });
+    });
+
+    var html = '';
+    groupOrder.forEach(function(office) {
+      var rows = groups[office];
+      html += '<div class="office-group">';
+      html += '<div class="office-header">';
+      html += '<span class="office-name">' + escapeHtml(office) + '</span>';
+      html += '<span class="office-total">총 ' + rows.length + '명</span>';
+      html += '</div>';
+
+      html += '<div class="table-scroll"><table><thead><tr>';
+      html += '<th>구분</th><th>성명</th><th>재직</th><th>연락처</th><th>입사일</th><th>퇴사일</th><th>잔여 월차</th><th>잔여 연차</th>';
+      html += '</tr></thead><tbody>';
+      rows.forEach(function(r) {
+        var bal = balanceOf(r);
+        html += '<tr>';
+        html += '<td>' + escapeHtml(r[COL_INFO.role] || '') + '</td>';
+        html += '<td><b>' + escapeHtml(r[COL_INFO.name] || '') + '</b></td>';
+        html += '<td>' + (isResigned(r) ? '<span style="color:#8a5a2b; font-weight:700;">퇴사</span>' : '재직') + '</td>';
+        html += '<td>' + escapeHtml(r[COL_INFO.phone] || '') + '</td>';
+        html += '<td>' + escapeHtml(r[COL_INFO.hireDate] || '') + '</td>';
+        html += '<td>' + escapeHtml(r[COL_INFO.resignDate] || '') + '</td>';
+        html += '<td><span class="monthly-badge">' + escapeHtml(bal.monthly) + '일</span></td>';
+        html += '<td><span class="annual-badge">' + escapeHtml(bal.annual) + '일</span></td>';
+        html += '</tr>';
+      });
+      html += '</tbody></table></div>';
+      html += '</div>';
+    });
+
+    container.innerHTML = html;
+  }
+
+  function loadAll() {
+    setStatus('불러오는 중입니다...');
+    fetchSheet(GID_INFO, function(rows) {
+      var header = findHeaderRow_(rows);
+      if (!header) {
+        setStatus('오류: 시트에서 헤더(항목명) 행을 찾지 못했습니다. 시트 구조를 확인해주세요.');
+        return;
+      }
+      COL_INFO = header.colMap;
+      INFO_DATA_START_ROW = header.dataStartRow;
+      allRows = rows.slice(INFO_DATA_START_ROW).filter(function(r) {
+        var name = r[COL_INFO.name] && r[COL_INFO.name].trim().length > 0;
+        return name; // 재직자·퇴사자 모두 읽고, 화면에서 [재직 구분]으로 나눕니다.
+      });
+      // 퇴사자 잔여 계산용 휴가 사용 내역 (실패해도 재직자 조회는 그대로 동작)
+      fetchSheet(GID_HISTORY, function(hrows) {
+        histRows = hrows.slice(1);
+        finish();
+      }, function() { histRows = []; finish(); }, 0);
+      function finish() {
+        setStatus('');
+        populateOfficeFilter();
+        populateRoleFilter();
+        render();
+        document.getElementById('updated').textContent = '조회 시각: ' + new Date().toLocaleString('ko-KR');
+      }
+    }, function(err) {
+      setStatus('오류: ' + err.message);
+    });
+  }
+
+  function downloadExcel() {
+    var rows = getFilteredRows();
+    if (rows.length === 0) { alert('내려받을 데이터가 없습니다.'); return; }
+    var aoa = [['지점', '구분', '성명', '재직구분', '연락처', '입사일', '퇴사일', '잔여 월차', '잔여 연차']];
+    rows.forEach(function(r) {
+      var bal = balanceOf(r);
+      aoa.push([
+        r[COL_INFO.branch] || '',
+        r[COL_INFO.role] || '',
+        r[COL_INFO.name] || '',
+        isResigned(r) ? '퇴사' : '재직',
+        r[COL_INFO.phone] || '',
+        r[COL_INFO.hireDate] || '',
+        r[COL_INFO.resignDate] || '',
+        bal.monthly,
+        bal.annual
+      ]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '잔여휴가');
+    var stamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, '잔여휴가_모아보기_' + stamp + '.xlsx');
+  }
+
+  document.getElementById('searchInput').addEventListener('input', render);
+
+  loadAll();
+</script>
+</body>
+</html>

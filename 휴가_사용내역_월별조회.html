@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="data:image/png;base64,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xZlnnhm33nprPPHEE/Htb387tt9++9Sx6AQFgC4bNWpUl286qpLevXvH8OHDU8eAZPr27Rvf+ta3YtasWfGrX/0q9txzz9SRqIECQJf17ds3hg0bljpGcqeddlr06dMndQxIrlevXjFixIj429/+FtOmTYuPfOQjqSOxCQoAdcn9xre2trY4++yzU8eAQmlra4ujjjoqZsyYEb/85S9dGigoBYC6HHDAAbHPPvukjpHMJz/5ydhjjz1Sx4BC6tatW5xxxhnx8MMPx1e+8hWXDAtGAaBuOe8C5PzZoVZ9+vSJH/7wh3HvvffGXnvtlToO/08BoG4nnHBCbLvttqljtFz//v3j6KOPTh0DSmPPPfeMu+++2xNEBaEAULf29vYYOXJk6hgtN3bsWM8/Qyf16tUrfvGLX8Tll18eW2+9deo4WfOnFw1x1llnRffu3VPHaJktt9wyTj/99NQxoLSGDRsWM2fOjN122y11lGwpADTEe9/73vjsZz+bOkbLnHLKKc5eoE79+/eP6dOnx4c//OHUUbKkANAwOd0Q59E/aIwddtghbr/99jj44INTR8mOAkDDDB48OIs7fA8//PD40Ic+lDoGVMZWW20VN954YxxxxBGpo2RFAaChcjgzzmmnA1qlo6MjrrzySm8PbCEFgIY6+eSTK31tfJdddoljjjkmdQyopC233DJ+97vfRb9+/VJHyYICQENV/e74MWPGePQPmminnXaKa6+9Njo6OlJHqTx/ktFwVR2SW2yxRYwYMSJ1DKi8ffbZJyZMmJA6RuVV709pktt1113jqKOOSh2j4U4++eTYZpttUseALAwbNiw+//nPp45RaQoATVHFmwGr+JmgyH7605/GDjvskDpGZSkANMURRxwRAwYMSB2jYQYPHhwDBw5MHQOy8p73vCcuuOCC1DEqSwGgKdra2mLMmDGpYzSMR/8gjaFDh8bQoUNTx6gkBYCmGT58ePTu3Tt1jLrl9ppjKJrvf//7WX3XSKsoADRNnz594tRTT00do25jxozxhw8ktPvuu8dJJ52UOkblKAA01dixY1NHqEuvXr3ijDPOSB0DsvfNb35TEW8wBYCm2nPPPePwww9PHaPLTjrppNh2221Tx4DsDRgwIE444YTUMSqlR+oAVN8555wTf/zjH1PH6BKP/lGPffbZJ2bPnt2Un92rV69ob2+P3r17R9++faNfv37Rv3//GDhwYAwcODAGDRpUuTPm8847L66++urUMSpDAaDpPv3pT8f73//++Pe//506SqcccsghvpiEwlq2bFksW7YsFi5cGC+88MI7/vett946DjvssBg6dGgce+yxseWWWyZI2Vjrys0jjzySOkoluARA03Xv3r2UjwQ6+6fMFi5cGDfddFOceeaZseuuu8Z5550Xzz//fOpYdTvllFNSR6gMBYCWOOOMM2KLLbZIHaNmO+20UwwZMiR1DGiIJUuWxPjx42PgwIFx/vnnx5IlS1JH6rITTzyxkt81koKjSEtss802ceKJJ6aOUbOzzjorevRwhYxqWblyZVx00UWx3377xcyZM1PH6ZKdd945Dj300NQxKkEBoGXK8ja99vb2GDlyZOoY0DTPP/98HHPMMTF+/PjUUbrkuOOOSx2hEhQAWmbQoEFx8MEHp46xWccff3xsv/32qWNAU61atSrOO++8+NnPfpY6Sqd9/OMfTx2hEhQAWqoMN9aVZacCGuG73/1uTJo0KXWMThk4cGBstdVWqWOUngJASw0ZMiT69euXOsZGHXjggbHvvvumjgEt9bWvfS3uv//+1DFq1q1btzjooINSxyg9BYCW6tmzZ5x55pmpY2xUGXYooNFWrFgRY8aMiRUrVqSOUjOXAeqnANByZ555ZrzrXe9KHeMddtxxxxg2bFjqGJDE7Nmz46KLLkodo2YHHnhg6gilpwDQcjvssEMhB+3o0aOjZ8+eqWNAMj//+c9j6dKlqWPUZLfddksdofQUAJIo2lb7u971rhg1alTqGJDUggUL4vLLL08doyb9+vWL9vb21DFKTQHIXKr38x9wwAGFutlu2LBh0bdv3yRrP/vss0nWhQ0py5fttLW1xS677JI6RqkpAJmbMGFCsrWLtAuQ8tG/lL8D+F9//etf48UXX0wdoya77rpr6gilpgBk7sorr4xFixYlWfuEE06I7bbbLsna69tvv/1i//33T7L2vHnz4vrrr0+yNmzI2rVrY8aMGalj1KR///6pI5SaApC5119/PaZMmZJk7aK8cvcLX/hCsrUvvvjiWLlyZbL1YUPuu+++1BFq4o2d9VEAiPHjx8fatWuTrD169Ojo3r17krUj3vwD5HOf+1yStVeuXBmXXHJJkrVhUx599NHUEWrS0dGROkKpKQDEk08+GXfccUeStd/73vfGsccem2TtiLTvJJg2bVrMmzcvydqwKaluDu6sLbfcMnWEUlMAiIiIX/3qV8nWTnUzYM+ePWP06NFJ1o6I+PWvf51sbdiU559/PnWEmigA9VEAiIiI6dOnx5w5c5KsPXjw4Nh7771bvu7QoUOTfS/BAw88UJrrrORnxYoVsWrVqtQxNsslgPooAETEm3f+5vZIYMrHEJ39U3RleCOgHYD6KAC8ZcqUKbFkyZIka5988smx9dZbt2y9j370o8m+TeyVV16JqVOnJlkbatWtW/HHQ6qbl6ui+L9hWmbx4sVxxRVXJFm7o6MjRowY0bL1Uj76N2nSpFi+fHmy9aEWvXr1Sh1hs15//fXUEUpNAeBtxo0bl6xVjxkzpiVnHdtuu22ccMIJTV9nQ1atWhUTJ05MsjbUqlevXtGjR4/UMTarDJcpikwB4G1mz54dd911V5K1+/fvH0cddVTT1xk1alSyLxG54YYbYu7cuUnWhlq9733vSx2hJnYA6qMA8A4pb1Br9jv5e/ToEWeddVZT19iUcePGJVsbalWWAmAHoD4KAO9w2223xdNPP51k7U996lMxYMCApv384447Lnbeeeem/fxNeeihh+Kee+5JsjZ0xsCBA1NHqIkCUB8FgHdYs2ZNskcC29raYsyYMU37+R79g8078MADU0eoiTdp1kcBYIMuu+yyZNfXhg8fHr179274z/3whz8cH//4xxv+c2uxYMGCuPbaa5OsDZ3RvXv3OPTQQ1PHqMlTTz2VOkKpKQBs0MKFC+Oqq65KsnafPn3itNNOa/jPbfb9BZvym9/8Jt54441k60OtDj300EJ8TXctnnnmmdQRSk0BYKNS3rA2duzYhv68bbbZJk466aSG/sxarV692qN/lMapp56aOkJN1qxZE88++2zqGKWmALBRjz76aPz5z39OsvYHP/jB+MQnPtGwnzdy5MjYYostGvbzOuOWW24pzberkbcdd9wxWVHurLlz58aKFStSxyg1BYBNSnnjWqNu2OvevXvSR//c/EdZfOMb30j29did9eSTT6aOUHoKAJt0yy23xHPPPZdk7WOOOSZ22WWXun/OZz7zmXj/+9/fgESd99hjjyXbRYHOGDRoUNKi3Fn33ntv6gilpwCwSatXr072SGC3bt0a8khgypv/nP1TBh0dHTFx4sTo3r176ig1mzlzZuoI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">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>휴가 사용내역 (월별)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --ink: #4a3f5c;
+    --paper: #fdf6fb;
+    --line: #ecdcf0;
+    --accent: #8e6fc4;
+    --accent-soft: #f1e8fb;
+    --warn: #d6748c;
+    --muted: #8b7f99;
+    --muted2: #c6b6da;
+    --sans: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); padding: 40px 20px 80px;
+    font-size: 16px;
+  }
+  @media (max-width: 480px) {
+    body { padding: 22px 16px 64px; }
+    table { font-size: 13.5px; }
+    thead th, tbody td { padding: 8px 10px; }
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 24px; font-weight: 800; margin: 0 0 6px; text-align: center; }
+  .sub { color: var(--muted); font-size: 15px; margin: 0 0 24px; text-align: center; }
+
+  .panel {
+    background: #fff; border: 1px solid var(--line); border-radius: 18px;
+    padding: 20px; box-shadow: 0 3px 12px rgba(142,111,196,0.08); margin-bottom: 18px;
+  }
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+  .field { flex: 1; min-width: 140px; }
+  .field label { display: block; font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 6px; }
+  input[type=month], input[type=text] {
+    width: 100%; font-size: 16px; padding: 12px 14px;
+    border: 1px solid var(--line); border-radius: 12px;
+    background: #fdf9fe; color: var(--ink);
+  }
+  input:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button {
+    font-family: var(--sans); font-size: 15px; font-weight: 700;
+    padding: 12px 20px; border-radius: 999px; border: 1px solid var(--accent);
+    background: var(--accent); color: #fff; cursor: pointer; white-space: nowrap;
+  }
+  button:hover { opacity: 0.92; }
+
+  .branch-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .branch-btn {
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
+    padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fdf9fe; color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .branch-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  .role-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
+  .role-btn {
+    font-family: var(--sans); font-size: 13px; font-weight: 700;
+    padding: 7px 14px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fdf9fe; color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .role-btn.active { background: var(--warn); border-color: var(--warn); color: #fff; }
+
+  .toolbar-row { display: flex; justify-content: flex-end; margin: 12px 0 0; }
+  .excel-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--sans); font-size: 13.5px; font-weight: 700;
+    padding: 9px 16px; border-radius: 999px; border: none;
+    background: #3fa66a; color: #fff; cursor: pointer;
+  }
+  .excel-btn:hover { background: #35915c; }
+
+  .status { font-size: 14px; color: var(--warn); text-align: center; margin: 12px 0; min-height: 18px; white-space: pre-line; }
+  .empty { color: var(--muted2); font-size: 15px; text-align: center; margin-top: 24px; }
+
+  .summary-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .summary { flex: 1; background: var(--accent-soft); border-radius: 10px; padding: 13px; text-align: center; }
+  .summary .label { font-size: 13px; color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+  .summary .value { font-size: 22px; font-weight: 800; color: var(--ink); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  thead th {
+    background: var(--accent-soft); color: var(--accent); text-align: left;
+    padding: 10px 12px; border-bottom: 2px solid var(--accent); font-weight: 700; white-space: nowrap;
+  }
+  tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  tbody tr:nth-child(even) { background: #faf3fb; }
+  .tag { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .tag-month { background: var(--accent-soft); color: var(--accent); }
+  .tag-annual { background: #fbe4ec; color: var(--warn); }
+  .tag-etc { background: #f0eaf7; color: var(--muted); }
+  .note { color: var(--muted2); font-size: 13px; }
+  .table-scroll { overflow-x: auto; }
+  .updated { text-align: center; font-size: 12.5px; color: var(--muted2); margin-top: 20px; }
+
+  .back-home {
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+    width: 100%; box-sizing: border-box;
+    padding: 13px; margin: 0 0 20px;
+    border: 1px solid var(--line); border-radius: 14px;
+    background: #fff; color: var(--accent);
+    font-size: 15px; font-weight: 700; text-decoration: none;
+    box-shadow: 0 3px 10px rgba(142,111,196,0.08);
+  }
+  .back-home:hover { background: var(--accent-soft); }
+
+  /* ---- PC(데스크톱) 화면에서는 더 넓은 레이아웃으로 ---- */
+  @media (min-width: 1024px) {
+    .wrap { max-width: 1000px; }
+    h1 { font-size: 32px; }
+    .sub { font-size: 17px; }
+    .panel { padding: 24px; }
+    .field label { font-size: 14px; }
+    input[type=month], input[type=text] { font-size: 17px; padding: 13px 15px; }
+    button { font-size: 16px; padding: 13px 24px; }
+    .branch-btn { font-size: 14.5px; padding: 10px 18px; }
+    .status { font-size: 15px; }
+    .summary { padding: 16px; }
+    .summary .label { font-size: 14px; }
+    .summary .value { font-size: 25px; }
+    table { font-size: 15.5px; }
+    thead th, tbody td { padding: 12px 15px; }
+    .tag { font-size: 13.5px; padding: 4px 12px; }
+    .empty { font-size: 16px; }
+    .back-home { padding: 14px; border-radius: 14px; font-size: 15.5px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back-home" href="index.html">‹ 매니저 관리 시스템으로 돌아가기</a>
+  <h1>휴가 사용내역 (월별)</h1>
+  <p class="sub">조회 월을 선택하면 해당 월에 사용된 휴가 내역이 바로 조회됩니다.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="field">
+        <label>조회 월</label>
+        <input type="month" id="monthInput">
+      </div>
+      <div class="field">
+        <label>재직 구분</label>
+        <select id="statusFilter" onchange="document.getElementById('monthInput').disabled = (this.value === 'resigned'); doSearch()" style="font-size:15px; padding:11px; border:1px solid var(--line); border-radius:10px; background:#fff;">
+          <option value="all">전체</option><option value="active">재직자</option><option value="resigned">퇴사자</option>
+        </select>
+      </div>
+      <div class="field" style="flex:2;">
+        <label>이름 또는 전화번호</label>
+        <input type="text" id="personSearch" placeholder="이름 / 전화번호 (선택)" autocomplete="off" style="width:100%; font-size:15px; padding:11px; border:1px solid var(--line); border-radius:10px; background:#fff;">
+      </div>
+      <button type="button" onclick="doSearch()">조회하기</button>
+    </div>
+    <div class="branch-row" id="branchRow">
+      <button type="button" class="branch-btn active" data-office="" onclick="selectOffice('')">전체</button>
+    </div>
+    <div class="role-row" id="roleRow">
+      <button type="button" class="role-btn active" data-role="" onclick="selectRole('')">전체</button>
+    </div>
+    <div class="toolbar-row">
+      <button type="button" class="excel-btn" onclick="downloadExcel()">⬇ 엑셀 다운로드</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div id="results"></div>
+  <div class="updated" id="updated"></div>
+</div>
+
+<script>
+  var SHEET_ID = '1X3LpMT3fl7AoIPPPNwces5UK4-uWxEkuDBkRX6BWvAE';
+  var GID_HISTORY = '628017033'; // 휴가사용내역 탭 (전체 이력)
+
+  var COL_HIST = {
+    branch: 1, role: 2, name: 3, memberId: 4,
+    startDate: 5, endDate: 6, days: 7, type: 8, note: 9
+  };
+  var HIST_DATA_START_ROW = 1;
+  var GID_INFO = '578655642'; // 사원정보 탭 (재직/퇴사 여부, 연락처 확인용)
+  var HEADER_LABELS = { memberId: '회원번호', branch: '지점', role: '업무구분', name: '직원명',
+    hireDate: '입사일', resignDate: '퇴사일', employmentStatus: '재직상태', phone: '연락처' };
+  var resignedIds = {};   // 회원번호 -> true (재직 기록이 하나도 없는 퇴사자)
+  var phoneById = {};     // 회원번호 -> 연락처(숫자만)
+
+  function findHeaderRow_(rows) {
+    var keys = Object.keys(HEADER_LABELS);
+    var needed = Math.ceil(keys.length / 2);
+    for (var r = 0; r < rows.length; r++) {
+      var map = {}, found = 0;
+      keys.forEach(function(k) { var i = rows[r].indexOf(HEADER_LABELS[k]); if (i !== -1) { map[k] = i; found++; } });
+      if (found >= needed) return { colMap: map, dataStartRow: r + 1 };
+    }
+    return null;
+  }
+
+  var histRows = null;
+  var selectedOffice = '';
+  var selectedRole = '';
+  var currentMonth = null;
+  var lastMatches = [];
+
+  // Default to current month
+  (function initMonth() {
+    var d = new Date();
+    var y = d.getFullYear();
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    document.getElementById('monthInput').value = y + '-' + m;
+  })();
+
+  document.getElementById('monthInput').addEventListener('change', function(){
+    doSearch();
+  });
+
+  function setStatus(msg) {
+    document.getElementById('status').textContent = msg || '';
+  }
+
+  // 지점명에 괄호가 있으면("광주(전주)") 괄호 앞부분을 대표 지점명으로 사용합니다.
+  // 지점 버튼은 이 대표 이름 기준으로 중복 없이 하나만 만들고, 그 버튼을 누르면
+  // 괄호 안 표기를 포함한 모든 관련 행이 함께 보입니다. (표/엑셀에는 원본 텍스트 그대로 표시)
+  function branchLabel(raw) {
+    var s = (raw || '').trim();
+    var idx = s.indexOf('(');
+    return idx === -1 ? s : s.slice(0, idx).trim();
+  }
+
+  function fetchSheet(gid, onDone, onError, headersCount) {
+    headersCount = headersCount || 0;
+    window.google = window.google || {};
+    window.google.visualization = window.google.visualization || {};
+    window.google.visualization.Query = window.google.visualization.Query || {};
+
+    var finished = false;
+    var handlerName = 'handler_' + gid;
+
+    var timeoutId = setTimeout(function() {
+      if (!finished) {
+        finished = true;
+        cleanup();
+        onError(new Error('응답 시간이 초과되었습니다.'));
+      }
+    }, 12000);
+
+    function cleanup() {
+      clearTimeout(timeoutId);
+      if (scriptEl && scriptEl.parentNode) scriptEl.parentNode.removeChild(scriptEl);
+      delete window.google.visualization.Query[handlerName];
+    }
+
+    window.google.visualization.Query[handlerName] = function(resp) {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      try {
+        if (!resp || resp.status === 'error') {
+          var msg = (resp && resp.errors && resp.errors[0] && resp.errors[0].detailed_message) || '시트 응답 오류';
+          throw new Error(msg);
+        }
+        var table = resp.table;
+        var rows = [];
+        // headers>0이면 구글이 항목명 행을 data에서 빼고 cols[].label로 돌려주므로, 첫 행으로 다시 끼워 넣습니다.
+        if (headersCount > 0) rows.push(table.cols.map(function(c) { return c.label || ''; }));
+        for (var r = 0; r < table.rows.length; r++) {
+          var cells = table.rows[r].c;
+          var rowArr = [];
+          for (var c = 0; c < cells.length; c++) {
+            var cell = cells[c];
+            if (!cell) { rowArr.push(''); continue; }
+            var val = (cell.f !== undefined && cell.f !== null) ? cell.f : cell.v;
+            rowArr.push(val === null || val === undefined ? '' : String(val));
+          }
+          rows.push(rowArr);
+        }
+        onDone(rows);
+      } catch (e) {
+        onError(e);
+      }
+    };
+
+    var url = 'https://docs.google.com/spreadsheets/d/' + SHEET_ID +
+      '/gviz/tq?gid=' + gid + '&headers=' + headersCount + '&tqx=out:json;responseHandler:google.visualization.Query.' + handlerName;
+
+    var scriptEl = document.createElement('script');
+    scriptEl.src = url;
+    scriptEl.onerror = function() {
+      if (finished) return;
+      finished = true;
+      cleanup();
+      onError(new Error('시트를 불러오지 못했습니다. 공유 설정을 확인해주세요.'));
+    };
+    document.body.appendChild(scriptEl);
+  }
+
+  function loadHistory(callback, onError) {
+    setStatus('시트에서 데이터를 불러오는 중입니다...');
+    fetchSheet(GID_HISTORY, function(rows) {
+      histRows = rows.slice(HIST_DATA_START_ROW).filter(function(row) {
+        return row[COL_HIST.name] && row[COL_HIST.name].trim().length > 0 && row[COL_HIST.startDate] && row[COL_HIST.startDate].trim().length > 0;
+      });
+      fetchSheet(GID_INFO, function(infoRows) {
+        var header = findHeaderRow_(infoRows);
+        if (header && header.colMap.memberId !== undefined) {
+          var C = header.colMap, hasActive = {}, hasResigned = {};
+          infoRows.slice(header.dataStartRow).forEach(function(r) {
+            var id = (r[C.memberId] || '').trim();
+            if (!id) return;
+            // 대시보드와 같은 기준: 퇴사일이 오늘 이전/당일이면 퇴사, 오늘 이후(퇴사예정)는 재직중
+            var rm = String(C.resignDate !== undefined ? (r[C.resignDate] || '') : '').match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+            var gone;
+            if (rm) { var t0 = new Date(); t0.setHours(0,0,0,0); gone = new Date(+rm[1], +rm[2]-1, +rm[3]) <= t0; }
+            else { var st = C.employmentStatus !== undefined ? (r[C.employmentStatus] || '') : ''; gone = st.indexOf('퇴사') !== -1 && st.indexOf('예정') === -1; }
+            if (gone) hasResigned[id] = true; else hasActive[id] = true;
+            if (C.phone !== undefined) {
+              var ph = String(r[C.phone] || '').replace(/[^0-9]/g, '');
+              if (ph && (!phoneById[id] || !gone)) phoneById[id] = ph;
+            }
+          });
+          resignedIds = {};
+          Object.keys(hasResigned).forEach(function(id) { if (!hasActive[id]) resignedIds[id] = true; });
+        }
+        document.getElementById('updated').textContent = '마지막 조회: ' + new Date().toLocaleString('ko-KR');
+        populateOfficeFilter();
+        populateRoleFilter();
+        callback();
+      }, onError, 2);
+    }, onError);
+  }
+
+  function populateOfficeFilter() {
+    var offices = {};
+    histRows.forEach(function(r) {
+      var o = branchLabel(r[COL_HIST.branch]);
+      if (o) offices[o] = true;
+    });
+    var row = document.getElementById('branchRow');
+    row.innerHTML = '<button type="button" class="branch-btn active" data-office="" onclick="selectOffice(\'\')">전체</button>';
+    Object.keys(offices).sort(function(a, b) { return a.localeCompare(b, 'ko'); }).forEach(function(o) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'branch-btn';
+      btn.setAttribute('data-office', o);
+      btn.textContent = o;
+      btn.onclick = function() { selectOffice(o); };
+      row.appendChild(btn);
+    });
+  }
+
+  function selectOffice(office) {
+    selectedOffice = office;
+    document.querySelectorAll('.branch-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-office') === office);
+    });
+    selectedRole = '';
+    populateRoleFilter();
+    if (currentMonth) render(currentMonth);
+  }
+
+  function populateRoleFilter() {
+    var row = document.getElementById('roleRow');
+    row.innerHTML = '<button type="button" class="role-btn active" data-role="" onclick="selectRole(\'\')">전체</button>';
+    var roles = {};
+    histRows.forEach(function(r) {
+      if (selectedOffice && branchLabel(r[COL_HIST.branch]) !== selectedOffice) return;
+      var role = (r[COL_HIST.role] || '').trim();
+      if (role) roles[role] = true;
+    });
+    Object.keys(roles).sort().forEach(function(role) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'role-btn';
+      btn.setAttribute('data-role', role);
+      btn.textContent = role;
+      btn.onclick = function() { selectRole(role); };
+      row.appendChild(btn);
+    });
+  }
+
+  function selectRole(role) {
+    selectedRole = role;
+    document.querySelectorAll('.role-btn').forEach(function(btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
+    });
+    if (currentMonth) render(currentMonth);
+  }
+
+  function toYearMonth(dateStr) {
+    if (!dateStr) return null;
+    // Handles "2026-08-20", "2026. 8. 20", "2026/8/20", etc.
+    var m = String(dateStr).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    if (m) {
+      return m[1] + '-' + String(m[2]).padStart(2, '0');
+    }
+    var t = Date.parse(dateStr);
+    if (!isNaN(t)) {
+      var d = new Date(t);
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+    return null;
+  }
+
+  function parseDateForSort(dateStr) {
+    if (!dateStr) return 0;
+    var m = String(dateStr).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+    if (m) {
+      return new Date(parseInt(m[1],10), parseInt(m[2],10)-1, parseInt(m[3],10)).getTime();
+    }
+    var t = Date.parse(dateStr);
+    return isNaN(t) ? 0 : t;
+  }
+
+  function tagClass(type) {
+    var t = (type || '').trim();
+    if (t.indexOf('월차') !== -1) return 'tag-month';
+    if (t.indexOf('연차') !== -1) return 'tag-annual';
+    return 'tag-etc';
+  }
+
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
+
+  function doSearch() {
+    var month = document.getElementById('monthInput').value;
+
+    if (!month) { setStatus('조회할 월을 선택해주세요.'); return; }
+    currentMonth = month;
+
+    if (histRows) {
+      setStatus('');
+      render(month);
+    } else {
+      loadHistory(
+        function(){ setStatus(''); render(month); },
+        function(err){ setStatus('오류: ' + err.message); }
+      );
+    }
+  }
+
+  function render(month) {
+    var container = document.getElementById('results');
+
+    var matches = histRows.filter(function(row) {
+      var ym = toYearMonth(row[COL_HIST.startDate]);
+      var allMonths = document.getElementById('statusFilter').value === 'resigned'; // 퇴사자는 월과 무관하게 전체 기간
+      if (!allMonths && ym !== month) return false;
+      if (selectedOffice && branchLabel(row[COL_HIST.branch]) !== selectedOffice) return false;
+      if (selectedRole && (row[COL_HIST.role] || '').trim() !== selectedRole) return false;
+      var id = (row[COL_HIST.memberId] || '').trim();
+      var f = document.getElementById('statusFilter').value;
+      if (f !== 'all') { var isRes = !!resignedIds[id]; if (f === 'resigned' ? !isRes : isRes) return false; }
+      var q = document.getElementById('personSearch').value.trim();
+      if (q) {
+        var digits = q.replace(/[^0-9]/g, '');
+        if (digits.length >= 4 && digits.length === q.replace(/[\s\-]/g, '').length) {
+          if ((phoneById[id] || '').indexOf(digits) === -1) return false;
+        } else if ((row[COL_HIST.name] || '').replace(/\s+/g, '').indexOf(q.replace(/\s+/g, '')) === -1) return false;
+      }
+      return true;
+    });
+
+    lastMatches = matches;
+
+    if (matches.length === 0) {
+      container.innerHTML = '<div class="empty">' + (document.getElementById('statusFilter').value === 'resigned' ? '조회되는 퇴사자의 휴가 사용 기록이 없습니다.' : '해당 월에 조회되는 휴가 사용 기록이 없습니다.') + '</div>';
+      return;
+    }
+
+    var allPeriod = document.getElementById('statusFilter').value === 'resigned';
+    matches.sort(function(a, b) {
+      if (allPeriod) {
+        var c = (a[COL_HIST.name] || '').localeCompare(b[COL_HIST.name] || '', 'ko');
+        if (c !== 0) return c;
+      }
+      return parseDateForSort(a[COL_HIST.startDate]) - parseDateForSort(b[COL_HIST.startDate]);
+    });
+
+    var totalMonthly = 0, totalAnnual = 0;
+    matches.forEach(function(row) {
+      var d = parseFloat(row[COL_HIST.days]) || 0;
+      var t = (row[COL_HIST.type] || '').trim();
+      if (t.indexOf('월차') !== -1) totalMonthly += d;
+      else if (t.indexOf('연차') !== -1) totalAnnual += d;
+    });
+
+    var html = allPeriod ? '<div class="meta" style="margin:10px 0; font-weight:700;">퇴사자 조회: 조회 월과 상관없이 전체 기간의 휴가 사용 내역을 보여줍니다.</div>' : '';
+    html += '<div class="summary-row">';
+    html += '<div class="summary"><div class="label">월차 합계</div><div class="value">' + totalMonthly + '</div></div>';
+    html += '<div class="summary"><div class="label">연차 합계</div><div class="value">' + totalAnnual + '</div></div>';
+    html += '<div class="summary"><div class="label">총 건수</div><div class="value">' + matches.length + '</div></div>';
+    html += '</div>';
+
+    html += '<div class="table-scroll"><table><thead><tr>';
+    html += '<th>이름</th><th>구분</th><th>지점</th><th>시작일</th><th>종료일</th><th>일수</th><th>종류</th><th>비고</th>';
+    html += '</tr></thead><tbody>';
+    matches.forEach(function(row) {
+      html += '<tr>';
+      html += '<td>' + escapeHtml(row[COL_HIST.name] || '') + '</td>';
+      html += '<td>' + (resignedIds[(row[COL_HIST.memberId] || '').trim()] ? '<span class="tag tag-etc">퇴사</span>' : '재직') + '</td>';
+      html += '<td>' + escapeHtml(row[COL_HIST.branch] || '') + '</td>';
+      html += '<td>' + escapeHtml(row[COL_HIST.startDate] || '') + '</td>';
+      html += '<td>' + escapeHtml(row[COL_HIST.endDate] || '') + '</td>';
+      html += '<td>' + escapeHtml(row[COL_HIST.days] || '') + '</td>';
+      html += '<td><span class="tag ' + tagClass(row[COL_HIST.type]) + '">' + escapeHtml(row[COL_HIST.type] || '') + '</span></td>';
+      html += '<td class="note">' + escapeHtml(row[COL_HIST.note] || '') + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div>';
+
+    container.innerHTML = html;
+  }
+
+  function downloadExcel() {
+    if (lastMatches.length === 0) { alert('내려받을 데이터가 없습니다.'); return; }
+    var aoa = [['이름', '지점', '업무구분', '재직구분', '시작일', '종료일', '일수', '종류', '비고']];
+    lastMatches.forEach(function(row) {
+      aoa.push([
+        row[COL_HIST.name] || '', row[COL_HIST.branch] || '', row[COL_HIST.role] || '', (resignedIds[(row[COL_HIST.memberId] || '').trim()] ? '퇴사' : '재직'),
+        row[COL_HIST.startDate] || '', row[COL_HIST.endDate] || '',
+        row[COL_HIST.days] || '', row[COL_HIST.type] || '', row[COL_HIST.note] || ''
+      ]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, '휴가사용내역');
+    var stamp = (document.getElementById('statusFilter').value === 'resigned') ? '퇴사자_전체' : (currentMonth || new Date().toISOString().slice(0, 7));
+    XLSX.writeFile(wb, '휴가_사용내역_' + stamp + '.xlsx');
+  }
+
+  document.getElementById('personSearch').addEventListener('input', function(){ if (histRows) render(document.getElementById('monthInput').value); });
+
+  // Auto-run for the current month on load
+  doSearch();
+</script>
+</body>
+</html>
