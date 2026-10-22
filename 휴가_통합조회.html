@@ -131,6 +131,25 @@
     .empty { font-size: 15.5px; }
     .back-home { padding: 14px; border-radius: 14px; font-size: 15.5px; }
   }
+
+  /* ---- 내 신청 현황 / 반려 알림 팝업 ---- */
+  .req-item { padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; background: #fff; font-size: 14px; }
+  .req-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .req-badge { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+  .req-wait { background: #f0eaf7; color: var(--muted); }
+  .req-ok { background: #e4f5ea; color: #2f8f55; }
+  .req-no { background: #fbe4ec; color: var(--warn); }
+  .req-reason { margin-top: 6px; font-size: 13.5px; color: var(--warn); line-height: 1.5; white-space: pre-line; word-break: break-all; }
+  .rj-overlay { display: none; position: fixed; inset: 0; z-index: 1000; background: rgba(40,30,55,0.45); align-items: center; justify-content: center; padding: 20px; }
+  .rj-overlay.open { display: flex; }
+  .rj-modal { background: #fff; border-radius: 18px; padding: 22px; width: 100%; max-width: 460px; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(60,40,90,0.25); }
+  .rj-modal h2 { margin: 0 0 4px; font-size: 18px; font-weight: 800; color: var(--warn); }
+  .rj-modal .rj-sub { font-size: 13.5px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .rj-item { border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; background: #fdf6fb; }
+  .rj-top { font-size: 14px; font-weight: 700; }
+  .rj-reason { margin-top: 6px; font-size: 14px; line-height: 1.5; white-space: pre-line; word-break: break-all; }
+  .rj-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .rj-actions button { flex: 1; margin-top: 0; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
@@ -153,6 +172,19 @@
   </div>
 
   <div class="updated" id="updated"></div>
+</div>
+
+<!-- 반려된 신청이 있을 때 뜨는 알림 팝업 (전화번호로 조회했을 때만) -->
+<div class="rj-overlay" id="rejectPopup">
+  <div class="rj-modal" role="dialog" aria-modal="true" aria-labelledby="rejectPopupTitle">
+    <h2 id="rejectPopupTitle">❌ 휴가 신청이 반려되었습니다</h2>
+    <div class="rj-sub">아래 사유를 확인해주세요. 다시 신청하려면 "휴가 신청하기"에서 구글폼을 새로 작성해주세요.</div>
+    <div id="rejectPopupList"></div>
+    <div class="rj-actions">
+      <button type="button" style="background:#fff; color:var(--accent); border:1px solid var(--accent);" onclick="closeRejectPopup()">나중에</button>
+      <button type="button" id="rejectAckBtn" onclick="ackRejects()">확인했습니다</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -477,6 +509,103 @@
 
     html = '<button type="button" onclick="downloadResult()" style="background:#fff; color:var(--accent); border:1px solid var(--accent); margin-top:14px;">⬇ 엑셀 다운로드 (조회한 내용)</button>' + html;
     container.innerHTML = html;
+
+    // 재직자 조회일 때만 "내 신청 현황"(대기/승인/반려)을 불러옵니다.
+    if (mode !== 'resigned') {
+      activeMatches.forEach(function(info) {
+        var mid = (info[COL_INFO.memberId] || '').trim();
+        if (mid) loadMyRequests(mid, found.kind === 'phone');
+      });
+    }
+  }
+
+  // ---------------------------------------------------------------
+  // 내 신청 현황 + 반려 알림 팝업
+  //  - 전화번호로 조회했을 때만 반려 사유를 보여주고 팝업을 띄웁니다.
+  //    (이름으로 조회하면 남이 사유를 보거나 확인 처리해버릴 수 있어서 막아둠)
+  //  - 팝업에서 [확인했습니다]를 누르면 시트의 "반려확인" 칸에 기록되어 다시 뜨지 않습니다.
+  // ---------------------------------------------------------------
+  function loadMyRequests(memberId, isPhone) {
+    var el = document.getElementById('reqStatus-' + memberId);
+    if (!el) return;
+    var url = DASHBOARD_WEBAPP_URL + '?action=myRequests&memberId=' + encodeURIComponent(memberId);
+    fetch(url).then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(data) {
+      if (!data || !data.ok) throw new Error((data && data.error) || '응답 오류');
+      el.innerHTML = renderMyRequests(data.rows || [], isPhone);
+      if (isPhone && data.rejectsToConfirm && data.rejectsToConfirm.length) {
+        showRejectPopup(data.rejectsToConfirm);
+      }
+    }).catch(function(err) {
+      el.innerHTML = '<div class="empty" style="margin-top:0;">신청 현황을 불러오지 못했습니다. (' + escapeHtml(err.message) + ')</div>';
+    });
+  }
+
+  function renderMyRequests(rows, isPhone) {
+    if (!rows.length) return '<div class="empty" style="margin-top:0;">최근 신청 내역이 없습니다.</div>';
+    return rows.map(function(r) {
+      var st = (r.status || '').trim();
+      var cls = st === '승인' ? 'req-ok' : (st === '반려' ? 'req-no' : 'req-wait');
+      var label = st || '승인 대기';
+      var period = r.startDate === r.endDate || !r.endDate ? r.startDate : (r.startDate + ' ~ ' + r.endDate);
+      var h = '<div class="req-item"><div class="req-top"><span>' + escapeHtml(period) + ' · ' + escapeHtml(r.type || '') + ' ' + escapeHtml(r.days || '') + '일</span>' +
+        '<span class="req-badge ' + cls + '">' + escapeHtml(label) + '</span></div>';
+      if (st === '반려') {
+        h += '<div class="req-reason">' + (isPhone
+          ? '반려 사유: ' + escapeHtml(r.reason || '(사유 없음)')
+          : '반려 사유는 전화번호로 조회하면 확인할 수 있습니다.') + '</div>';
+      }
+      return h + '</div>';
+    }).join('');
+  }
+
+  function showRejectPopup(items) {
+    var q = window.__rejectQueue = window.__rejectQueue || [];
+    items.forEach(function(it) {
+      if (!q.some(function(x) { return x.sheetRow === it.sheetRow && x.memberId === it.memberId; })) q.push(it);
+    });
+    document.getElementById('rejectPopupList').innerHTML = q.map(function(it) {
+      var period = it.startDate === it.endDate || !it.endDate ? it.startDate : (it.startDate + ' ~ ' + it.endDate);
+      return '<div class="rj-item"><div class="rj-top">' + escapeHtml(period) + ' · ' + escapeHtml(it.type || '') + ' ' + escapeHtml(it.days || '') + '일</div>' +
+        '<div class="rj-reason">' + escapeHtml(it.reason || '(사유 없음)') + '</div></div>';
+    }).join('');
+    document.getElementById('rejectAckBtn').disabled = false;
+    document.getElementById('rejectPopup').classList.add('open');
+  }
+
+  function closeRejectPopup() {
+    document.getElementById('rejectPopup').classList.remove('open');
+    window.__rejectQueue = [];
+  }
+
+  function ackRejects() {
+    var q = window.__rejectQueue || [];
+    if (!q.length) { closeRejectPopup(); return; }
+    var btn = document.getElementById('rejectAckBtn');
+    btn.disabled = true;
+    var jobs = q.map(function(it) {
+      return fetch(DASHBOARD_WEBAPP_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify({ action: 'ackReject', sheetRow: it.sheetRow, memberId: it.memberId })
+      }).then(function(res) { return res.json(); });
+    });
+    Promise.all(jobs).then(function(results) {
+      var failed = results.some(function(d) { return !(d && d.ok); });
+      if (failed) {
+        alert('일부 확인 처리에 실패했습니다. 잠시 후 다시 시도해주세요.');
+        btn.disabled = false;
+        return;
+      }
+      closeRejectPopup();
+      var q2 = document.getElementById('nameInput').value.trim();
+      if (q2) renderResults(q2); // 신청 현황 새로고침
+    }).catch(function(err) {
+      alert('확인 처리 중 오류가 발생했습니다: ' + err.message);
+      btn.disabled = false;
+    });
   }
 
   var lastBlocks = [];
@@ -530,6 +659,10 @@
       html += '<a href="' + formUrl + '" target="_blank" rel="noopener" style="display:block; text-decoration:none;">';
       html += '<button type="button" style="background:var(--warn); border-color:var(--warn);">휴가 신청하기</button>';
       html += '</a>';
+      if (memberId) {
+        html += '<div class="section-title">내 신청 현황</div>';
+        html += '<div id="reqStatus-' + escapeHtml(memberId) + '"><div class="empty" style="margin-top:0;">불러오는 중...</div></div>';
+      }
     }
 
     html += '<div class="section-title">잔여 휴가</div>';

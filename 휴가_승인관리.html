@@ -60,6 +60,36 @@
     background: var(--accent); color: #fff; cursor: pointer;
   }
   .approve-btn:hover { opacity: 0.92; }
+  .reject-btn {
+    width: 100%; font-family: var(--sans);
+    font-size: 15.5px; font-weight: 700; padding: 12px;
+    border-radius: 12px; border: 1px solid var(--warn);
+    background: #fff; color: var(--warn); cursor: pointer;
+  }
+  .reject-btn:hover { background: #fdf0f4; }
+  .reject-btn:disabled, .approve-btn:disabled { opacity: 0.6; cursor: default; }
+
+  /* ---- 반려 사유 입력 팝업 ---- */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    background: rgba(40, 30, 55, 0.45); align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: 18px; padding: 22px; width: 100%; max-width: 460px;
+    box-shadow: 0 10px 40px rgba(60, 40, 90, 0.25);
+  }
+  .modal h2 { margin: 0 0 6px; font-size: 18px; font-weight: 800; }
+  .modal .modal-info { font-size: 14px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
+  .modal textarea {
+    width: 100%; min-height: 96px; resize: vertical; font-family: var(--sans); font-size: 15px;
+    padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--ink);
+  }
+  .modal textarea:focus { outline: none; border-color: var(--accent); }
+  .modal .modal-count { font-size: 12.5px; color: var(--muted2); text-align: right; margin-top: 4px; }
+  .modal .modal-error { font-size: 13.5px; color: var(--warn); min-height: 18px; margin-top: 6px; white-space: pre-line; }
+  .modal .modal-actions { display: flex; gap: 8px; margin-top: 12px; }
+  .modal .modal-actions button { margin: 0; flex: 1; }
   .no-phone { color: #d1607d; font-size: 13px; margin-top: 6px; }
 
   .back-home {
@@ -106,6 +136,21 @@
   </div>
   <div class="status" id="status"></div>
   <div id="results"></div>
+</div>
+
+<!-- 반려 사유 입력 팝업 -->
+<div class="modal-overlay" id="rejectModal" onclick="if(event.target===this) closeRejectModal()">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rejectTitle">
+    <h2 id="rejectTitle">휴가 반려</h2>
+    <div class="modal-info" id="rejectInfo"></div>
+    <textarea id="rejectReason" maxlength="200" placeholder="반려 사유를 구체적으로 입력해주세요. (5자 이상)&#10;신청자에게 그대로 전달됩니다."></textarea>
+    <div class="modal-count"><span id="rejectCount">0</span> / 200</div>
+    <div class="modal-error" id="rejectError"></div>
+    <div class="modal-actions">
+      <button type="button" class="reject-btn" onclick="closeRejectModal()">취소</button>
+      <button type="button" class="approve-btn" id="rejectSubmitBtn" onclick="submitReject()">반려하기</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -289,7 +334,10 @@
       html += '<div class="meta" style="margin-top:10px; padding:10px; background:#faf3fb; border:1px solid var(--line); border-radius:10px;">' + escapeHtml(message) + '</div>';
 
       html += '<div style="display:flex; flex-direction:column; gap:8px; margin-top:12px;">';
-      html += '<button type="button" class="approve-btn" id="approve-btn-' + idx + '" onclick="approveRequest(' + idx + ')">✅ 승인하기</button>';
+      html += '<div style="display:flex; gap:8px;">';
+      html += '<button type="button" class="approve-btn" style="flex:1; margin-top:0;" id="approve-btn-' + idx + '" onclick="approveRequest(' + idx + ')">✅ 승인하기</button>';
+      html += '<button type="button" class="reject-btn" style="flex:1;" id="reject-btn-' + idx + '" onclick="openRejectModal(' + idx + ')">❌ 반려하기</button>';
+      html += '</div>';
       if (phone) {
         html += '<div style="display:flex; gap:8px;">';
         html += '<button type="button" class="approve-btn" style="flex:1; background:#fff; color:var(--accent);" onclick="copyPhone(' + idx + ')">전화번호 복사</button>';
@@ -370,6 +418,102 @@
       .catch(function(err) {
         setStatus('승인 요청 중 오류가 발생했습니다: ' + err.message);
         if (btn) { btn.disabled = false; btn.textContent = '✅ 승인하기'; }
+      });
+  }
+
+  // ---------------------------------------------------------------
+  // 반려 처리: 사유 입력 팝업 → 확인창 → action:'reject' 요청
+  // (사유 검사는 Code.gs의 validateRejectReason_와 같은 규칙이고, 서버에서도 한 번 더 검사합니다.)
+  // ---------------------------------------------------------------
+  function normalizeReason_(s) {
+    return String(s || '').replace(/\s+/g, ' ').trim();
+  }
+
+  function validateReason_(reason) {
+    var compact = reason.replace(/\s+/g, '');
+    if (!compact) return '반려 사유를 입력해주세요.';
+    if (compact.length < 5) return '반려 사유는 최소 5자 이상 구체적으로 입력해주세요.';
+    if (reason.length > 200) return '반려 사유는 200자 이내로 입력해주세요.';
+    if (!/[가-힣A-Za-z0-9]/.test(compact)) return '반려 사유에 글자나 숫자가 포함되어야 해요.';
+    if (/^[ㄱ-ㅎㅏ-ㅣ]+$/.test(compact)) return '자음/모음만으로는 사유를 입력할 수 없어요. 문장으로 적어주세요.';
+    var uniq = {}, n = 0;
+    compact.split('').forEach(function(ch) { if (!uniq[ch]) { uniq[ch] = true; n++; } });
+    if (n < 3) return '같은 글자만 반복된 사유는 입력할 수 없어요. 반려 이유를 구체적으로 적어주세요.';
+    return '';
+  }
+
+  function openRejectModal(idx) {
+    var item = window.__pendingRequests && window.__pendingRequests[idx];
+    if (!item) return;
+    window.__rejectTarget = item;
+    document.getElementById('rejectInfo').textContent =
+      item.name + ' (' + item.branch + ') · ' + item.startDate + ' ~ ' + item.endDate + ' · ' + item.type + ' ' + item.days + '일';
+    var ta = document.getElementById('rejectReason');
+    ta.value = '';
+    document.getElementById('rejectCount').textContent = '0';
+    document.getElementById('rejectError').textContent = '';
+    var sb = document.getElementById('rejectSubmitBtn');
+    sb.disabled = false; sb.textContent = '반려하기';
+    document.getElementById('rejectModal').classList.add('open');
+    setTimeout(function() { ta.focus(); }, 50);
+  }
+
+  function closeRejectModal() {
+    document.getElementById('rejectModal').classList.remove('open');
+    window.__rejectTarget = null;
+  }
+
+  document.addEventListener('input', function(e) {
+    if (e.target && e.target.id === 'rejectReason') {
+      document.getElementById('rejectCount').textContent = String(e.target.value.length);
+      document.getElementById('rejectError').textContent = '';
+    }
+  });
+
+  function submitReject() {
+    var item = window.__rejectTarget;
+    if (!item) return;
+    var errEl = document.getElementById('rejectError');
+    var reason = normalizeReason_(document.getElementById('rejectReason').value);
+    var msg = validateReason_(reason);
+    if (msg) { errEl.textContent = msg; return; }
+
+    if (!confirm(item.name + '님의 휴가(' + item.startDate + ' ~ ' + item.endDate + ')를 반려합니다.\n\n사유: ' + reason + '\n\n진행할까요?')) return;
+
+    var url = String(APPROVE_WEBAPP_URL || '').trim().replace(/^['"]|['"]$/g, '');
+    if (!url || url.indexOf('http') !== 0) {
+      errEl.textContent = '반려 기능이 아직 연결되지 않았습니다. 웹앱 URL을 확인해주세요.';
+      return;
+    }
+
+    var sb = document.getElementById('rejectSubmitBtn');
+    sb.disabled = true; sb.textContent = '처리 중...';
+    errEl.textContent = '';
+
+    fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'reject',
+        sheetRow: item.sheetRow,
+        memberId: item.memberId,
+        reason: reason
+      })
+    })
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (data && data.ok) {
+          closeRejectModal();
+          setStatus(item.name + '님의 휴가가 반려되었습니다. ❌');
+          loadAll();
+        } else {
+          errEl.textContent = (data && data.error) ? data.error : '반려에 실패했습니다.';
+          sb.disabled = false; sb.textContent = '반려하기';
+        }
+      })
+      .catch(function(err) {
+        errEl.textContent = '반려 요청 중 오류가 발생했습니다: ' + err.message;
+        sb.disabled = false; sb.textContent = '반려하기';
       });
   }
 
