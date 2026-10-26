@@ -113,6 +113,7 @@
   .tag { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 700; background: #f0eaf7; color: var(--muted); white-space: nowrap; }
   .tag.voluntary { background: #fbe4ec; color: var(--warn); }
   .tag.expired { background: var(--accent-soft); color: var(--accent); }
+  .tag.pending { background: #fff3d6; color: #b07a12; }
   .empty { color: var(--muted2); font-size: 15px; text-align: center; margin-top: 20px; }
 
   .updated { text-align: center; font-size: 12.5px; color: var(--muted2); margin-top: 16px; }
@@ -151,7 +152,7 @@
 <div class="wrap">
   <a class="back-home" href="index.html">‹ 매니저 관리 시스템으로 돌아가기</a>
   <h1>퇴사자 명단</h1>
-  <p class="sub">최근 퇴사한 매니저 명단입니다.</p>
+  <p class="sub">최근 퇴사한 매니저와 퇴사예정 매니저 명단입니다.</p>
   <p class="privacy-note">개인정보 보호를 위해 주민등록번호·계좌번호·주소 등은 표시하지 않습니다.</p>
 
   <div class="panel">
@@ -182,6 +183,7 @@
 <script>
   var SHEET_ID = '1kQEUUWl9zFmd493YSopY2HxS4aAaGou_3Bar6G4fuqs';
   var GID_RESIGNED = '2087818190';
+  var GID_ACTIVE = '1812898646'; // 현근무자 탭: 재직상태가 "퇴사예정"인 사람도 명단에 함께 보여주기 위해 읽습니다.
 
   // 승인 처리에 쓰는 것과 같은 Apps Script 웹앱 URL입니다. (배포 방법은 함께 전달된
   // "승인_기능_설정가이드.md" 문서를 참고하세요.)
@@ -238,6 +240,77 @@
       }
     }
     return null;
+  }
+
+  // ---- 현근무자 탭에서 "퇴사예정"인 사람 읽기 ----
+  // 현근무자 탭도 헤더(항목명) 텍스트로 열 위치를 찾습니다. (퇴사자 탭과 열 순서가 달라도 안전)
+  var ACTIVE_ALIASES = {
+    office: ['지점', '지점명'],
+    role: ['업무구분', '구분'],
+    name: ['성명', '직원명', '이름'],
+    phone: ['연락처', '전화번호'],
+    hireDate: ['입사일'],
+    resignDate: ['퇴사일'],
+    status: ['재직상태'],
+    reason: ['계약종료사유', '퇴사사유']
+  };
+
+  // 현근무자 탭 rows에서 재직상태가 "퇴사"를 포함하는 행(=퇴사예정)만 골라, 퇴사자 탭과 같은
+  // 열 구조(COL)의 행 배열로 바꿔 돌려줍니다. 각 행에는 _pending=true 표시가 붙습니다.
+  function parseActiveResigning_(rows) {
+    var keys = Object.keys(ACTIVE_ALIASES);
+    var map = null, start = 0;
+    for (var r = 0; r < Math.min(rows.length, 10); r++) {
+      var cells = (rows[r] || []).map(function(c) { return String(c || '').replace(/\s+/g, ''); });
+      var m = {}, found = 0;
+      keys.forEach(function(k) {
+        for (var a = 0; a < ACTIVE_ALIASES[k].length; a++) {
+          var idx = cells.indexOf(ACTIVE_ALIASES[k][a]);
+          if (idx !== -1) { m[k] = idx; found++; return; }
+        }
+      });
+      // 재직상태와 성명 열은 반드시 있어야 하고, 전체 항목 중 4개 이상 일치해야 헤더 행으로 인정합니다.
+      if (found >= 4 && m.status !== undefined && m.name !== undefined) { map = m; start = r + 1; break; }
+    }
+    if (!map) throw new Error('현근무자 탭에서 "재직상태" 헤더를 찾지 못했습니다.');
+
+    function cell(row, k) { return map[k] === undefined ? '' : String(row[map[k]] == null ? '' : row[map[k]]).trim(); }
+
+    var out = [];
+    rows.slice(start).forEach(function(row) {
+      var name = cell(row, 'name');
+      if (!name) return;
+      var status = cell(row, 'status');
+      if (status.indexOf('퇴사') === -1) return; // "퇴사예정" 등 퇴사가 들어간 재직상태만
+      var o = [];
+      o[COL.office] = cell(row, 'office');
+      o[COL.role] = cell(row, 'role');
+      o[COL.name] = name;
+      o[COL.phone] = cell(row, 'phone');
+      o[COL.hireDate] = cell(row, 'hireDate');
+      o[COL.resignDate] = cell(row, 'resignDate');
+      o[COL.resignReason] = cell(row, 'reason');
+      o._pending = true;
+      out.push(o);
+    });
+    return out;
+  }
+
+  // 같은 사람이 퇴사자 탭에도 이미 있으면(이름+연락처, 또는 이름+입사일이 같으면) 중복으로 넣지 않습니다.
+  function mergePending_(resignedRows, pendingRows) {
+    function digits(s) { return String(s || '').replace(/[^0-9]/g, ''); }
+    function baseName(s) { return String(s || '').replace(/\(.*?\)/g, '').replace(/\s+/g, ''); }
+    var merged = resignedRows.slice();
+    pendingRows.forEach(function(p) {
+      var dup = resignedRows.some(function(r) {
+        if (baseName(r[COL.name]) !== baseName(p[COL.name])) return false;
+        var rp = digits(r[COL.phone]), pp = digits(p[COL.phone]);
+        if (rp && pp) return rp === pp;
+        return String(r[COL.hireDate] || '').trim() === String(p[COL.hireDate] || '').trim();
+      });
+      if (!dup) merged.push(p);
+    });
+    return merged;
   }
 
   var allRows = [];
@@ -410,7 +483,8 @@
       html += '<td>' + escapeHtml(r[COL.hireDate] || '') + '</td>';
       html += '<td>' + escapeHtml(r[COL.resignDate] || '') + '</td>';
       var reason = r[COL.resignReason] || '';
-      html += '<td>' + (reason ? '<span class="' + reasonTag(reason) + '">' + escapeHtml(reason) + '</span>' : '') + '</td>';
+      var pendingTag = r._pending ? '<span class="tag pending">퇴사예정</span> ' : '';
+      html += '<td>' + pendingTag + (reason ? '<span class="' + reasonTag(reason) + '">' + escapeHtml(reason) + '</span>' : '') + '</td>';
       html += '</tr>';
     });
     html += '</tbody></table></div>';
@@ -419,18 +493,45 @@
 
   function loadAll() {
     setStatus('불러오는 중입니다...');
-    fetchSheet(GID_RESIGNED, function(rows) {
-      var start = detectHeader_(rows);
-      allRows = rows.slice(start === null ? DATA_START_ROW : start).filter(function(r) {
-        return r[COL.name] && r[COL.name].trim().length > 0;
-      });
-      setStatus('');
+    var resignedRows = null, pendingRows = null, activeErr = null, finished = false;
+
+    function tryFinish() {
+      if (finished || resignedRows === null || pendingRows === null) return;
+      finished = true;
+      allRows = mergePending_(resignedRows, pendingRows);
+      // 현근무자 탭만 읽기 실패한 경우에도 퇴사자 탭 내용은 그대로 보여주고, 안내만 남깁니다.
+      setStatus(activeErr ? '※ 현근무자 탭의 퇴사예정자를 불러오지 못했습니다. (' + activeErr.message + ')' : '');
       populateOfficeFilter();
       populateRoleFilter();
       render();
       document.getElementById('updated').textContent = '조회 시각: ' + new Date().toLocaleString('ko-KR');
+    }
+
+    // 1) 퇴사자 탭 (실패하면 전체 오류)
+    fetchSheet(GID_RESIGNED, function(rows) {
+      var start = detectHeader_(rows);
+      resignedRows = rows.slice(start === null ? DATA_START_ROW : start).filter(function(r) {
+        return r[COL.name] && r[COL.name].trim().length > 0;
+      });
+      tryFinish();
     }, function(err) {
+      finished = true;
       setStatus('오류: ' + err.message);
+    });
+
+    // 2) 현근무자 탭의 퇴사예정자 (퇴사자 탭 열 위치가 확정된 뒤 COL을 쓰므로, 응답 처리는 resignedRows 이후에 합니다)
+    fetchSheet(GID_ACTIVE, function(rows) {
+      var waitResigned = function() {
+        if (finished) return;
+        if (resignedRows === null) { setTimeout(waitResigned, 50); return; }
+        try { pendingRows = parseActiveResigning_(rows); }
+        catch (e) { activeErr = e; pendingRows = []; }
+        tryFinish();
+      };
+      waitResigned();
+    }, function(err) {
+      activeErr = err; pendingRows = [];
+      tryFinish();
     });
   }
 
@@ -446,11 +547,12 @@
       return db - da;
     });
     if (rows.length === 0) { alert('내려받을 데이터가 없습니다.'); return; }
-    var aoa = [['지점', '구분', '성명', '연락처', '입사일', '퇴사일', '사유']];
+    var aoa = [['지점', '구분', '성명', '연락처', '입사일', '퇴사일', '사유', '상태']];
     rows.forEach(function(r) {
       aoa.push([
         r[COL.office] || '', r[COL.role] || '', r[COL.name] || '', r[COL.phone] || '',
-        r[COL.hireDate] || '', r[COL.resignDate] || '', r[COL.resignReason] || ''
+        r[COL.hireDate] || '', r[COL.resignDate] || '', r[COL.resignReason] || '',
+        r._pending ? '퇴사예정' : '퇴사'
       ]);
     });
     var ws = XLSX.utils.aoa_to_sheet(aoa);
