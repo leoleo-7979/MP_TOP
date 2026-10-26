@@ -206,6 +206,40 @@
   };
   var DATA_START_ROW = 1;
 
+  // 시트에 열이 추가/삭제/이동되어도 코드를 고치지 않도록, 헤더(항목명) 텍스트로 열 위치를
+  // 자동으로 찾습니다. 항목명이 조금 다르게 적혀있을 가능성을 대비해 후보 이름을 여러 개 둡니다.
+  // 헤더 행을 못 찾으면 위의 고정 열 번호(COL)를 그대로 사용합니다.
+  var HEADER_ALIASES = {
+    office: ['지점', '지점명'],
+    role: ['구분', '업무구분'],
+    name: ['성명', '직원명', '이름'],
+    phone: ['연락처', '전화번호'],
+    hireDate: ['입사일'],
+    resignDate: ['퇴사일'],
+    resignReason: ['계약종료사유', '퇴사사유']
+  };
+
+  // rows에서 헤더 행을 찾아 COL을 갱신하고 데이터 시작 행 번호를 반환합니다. (못 찾으면 null)
+  function detectHeader_(rows) {
+    var keys = Object.keys(HEADER_ALIASES);
+    var needed = 4;
+    for (var r = 0; r < Math.min(rows.length, 10); r++) {
+      var cells = (rows[r] || []).map(function(c) { return String(c || '').replace(/\s+/g, ''); });
+      var map = {}, found = 0;
+      keys.forEach(function(k) {
+        for (var a = 0; a < HEADER_ALIASES[k].length; a++) {
+          var idx = cells.indexOf(HEADER_ALIASES[k][a]);
+          if (idx !== -1) { map[k] = idx; found++; return; }
+        }
+      });
+      if (found >= needed) {
+        Object.keys(map).forEach(function(k) { COL[k] = map[k]; });
+        return r + 1;
+      }
+    }
+    return null;
+  }
+
   var allRows = [];
   var selectedOffice = '';
   var selectedRole = '';
@@ -386,7 +420,8 @@
   function loadAll() {
     setStatus('불러오는 중입니다...');
     fetchSheet(GID_RESIGNED, function(rows) {
-      allRows = rows.slice(DATA_START_ROW).filter(function(r) {
+      var start = detectHeader_(rows);
+      allRows = rows.slice(start === null ? DATA_START_ROW : start).filter(function(r) {
         return r[COL.name] && r[COL.name].trim().length > 0;
       });
       setStatus('');

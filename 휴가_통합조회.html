@@ -145,6 +145,15 @@
     .back-home { padding: 14px; border-radius: 14px; font-size: 15.5px; }
   }
 
+  /* ---- 이름 후보 목록 / 자동완성 ---- */
+  .suggest-box { display: none; position: absolute; left: 0; right: 0; top: 100%; margin-top: 4px; z-index: 50; background: #fff; border: 1px solid var(--line); border-radius: 12px; box-shadow: 0 6px 20px rgba(60,40,90,0.15); max-height: 300px; overflow-y: auto; }
+  .sg-item, .cand-item { padding: 10px 14px; cursor: pointer; font-size: 15px; }
+  .sg-item + .sg-item { border-top: 1px solid var(--line); }
+  .sg-item:hover, .cand-item:hover { background: var(--accent-soft); }
+  .sg-meta { font-size: 12.5px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .cand-item { border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; background: #fff; }
+  .cand-badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11.5px; font-weight: 700; background: #fbe4ec; color: var(--warn); }
+
   /* ---- 내 신청 현황 / 반려 알림 팝업 ---- */
   .req-item { padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; margin-top: 8px; background: #fff; font-size: 14px; }
   .req-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -177,7 +186,10 @@
       <label style="flex:1; text-align:center; padding:10px; border:1px solid var(--line); border-radius:10px; cursor:pointer; font-weight:700; background:#fff;"><input type="radio" name="mode" value="active" checked onchange="onModeChange()"> 재직자</label>
       <label style="flex:1; text-align:center; padding:10px; border:1px solid var(--line); border-radius:10px; cursor:pointer; font-weight:700; background:#fff;"><input type="radio" name="mode" value="resigned" onchange="onModeChange()"> 퇴사자</label>
     </div>
-    <input type="text" id="nameInput" placeholder="이름 또는 전화번호 입력 (예: 홍길동 / 010-1234-5678)" autocomplete="off">
+    <div style="position:relative;">
+      <input type="text" id="nameInput" placeholder="이름 또는 전화번호 입력 (예: 홍길동 / 010-1234-5678)" autocomplete="off">
+      <div id="suggestBox" class="suggest-box"></div>
+    </div>
     <div class="notice">※ 프리랜서, 건수제 매니저는 월차/연차가 생성되지 않습니다.</div>
     <button type="button" id="searchBtn" onclick="doSearch()">조회하기</button>
     <div class="status" id="status"></div>
@@ -267,8 +279,11 @@
   var histRows = null;
 
   document.getElementById('nameInput').addEventListener('keydown', function(e){
-    if (e.key === 'Enter') doSearch();
+    if (e.key === 'Enter') { hideSuggest(); doSearch(); }
   });
+  document.getElementById('nameInput').addEventListener('input', onNameTyping);
+  document.getElementById('nameInput').addEventListener('focus', onNameTyping);
+  document.getElementById('nameInput').addEventListener('blur', function() { setTimeout(hideSuggest, 150); });
 
   function setStatus(msg) {
     document.getElementById('status').textContent = msg || '';
@@ -457,14 +472,66 @@
       if (!n) return;
       if (n === q) exact.push(r); else if (n.indexOf(q) !== -1) partial.push(r);
     });
-    return { kind: 'name', rows: exact.length ? exact : partial };
+    // 정확히 같은 이름뿐 아니라 "고대복" ↔ "고대복(재)"처럼 이름이 포함된 기록도 모두 후보로 보여줍니다.
+    // 정확히 일치하는 이름을 먼저, 그 안에서는 입사일이 최신인 순서로 정렬합니다.
+    function hireTs(r) { var d = parseYMD(r[COL_INFO.hireDate]); return d ? d.getTime() : 0; }
+    function byHireDesc(a, b) { return hireTs(b) - hireTs(a); }
+    exact.sort(byHireDesc); partial.sort(byHireDesc);
+    return { kind: 'name', rows: exact.concat(partial) };
   }
 
-  function renderResults(query) {
+  // ---- 입력 중 이름 후보 목록 (자동완성) ----
+  function hideSuggest() {
+    var box = document.getElementById('suggestBox');
+    if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+  }
+  function candLabel(info) {
+    var tail = normalizeDigits(info[COL_INFO.phone]).slice(-4);
+    var parts = [];
+    if (info[COL_INFO.branch]) parts.push(info[COL_INFO.branch]);
+    if (info[COL_INFO.hireDate]) parts.push('입사 ' + info[COL_INFO.hireDate]);
+    if (tail) parts.push('끝 ' + tail);
+    return parts.join(' · ');
+  }
+  function onNameTyping() {
+    var q = document.getElementById('nameInput').value.trim();
+    var box = document.getElementById('suggestBox');
+    if (!q || !infoRows || isPhoneLikeQuery(q)) { hideSuggest(); return; }
+    var mode = getMode();
+    var list = findInfoRows(q).rows.filter(function(r) {
+      return mode === 'resigned' ? isResignedRow(r) : !isResignedRow(r);
+    }).slice(0, 8);
+    if (!list.length) { hideSuggest(); return; }
+    window.__suggest = list;
+    box.innerHTML = list.map(function(r, i) {
+      return '<div class="sg-item" onmousedown="pickSuggest(' + i + ')"><b>' + escapeHtml(r[COL_INFO.name]) +
+        '</b> <span class="sg-meta">' + escapeHtml(candLabel(r)) + '</span></div>';
+    }).join('');
+    box.style.display = 'block';
+  }
+  function pickSuggest(i) {
+    var r = (window.__suggest || [])[i];
+    if (!r) return;
+    document.getElementById('nameInput').value = r[COL_INFO.name];
+    hideSuggest();
+    document.getElementById('results').innerHTML = '';
+    renderResults(r[COL_INFO.name], [r]);
+  }
+  function pickCandidate(i) {
+    var r = (window.__cands || [])[i];
+    if (!r) return;
+    renderResults(document.getElementById('nameInput').value.trim(), [r]);
+  }
+  function showAllCandidates() {
+    var c = window.__cands || [];
+    renderResults(document.getElementById('nameInput').value.trim(), c);
+  }
+
+  function renderResults(query, forcedRows) {
     var container = document.getElementById('results');
     var mode = getMode();
 
-    var found = findInfoRows(query);
+    var found = forcedRows ? { kind: 'name', rows: forcedRows, forced: true } : findInfoRows(query);
     var phoneMatches = found.rows;
 
     // 재직자: 퇴사일이 비어 있는 기록만 (재입사자는 이전 기록이 퇴사 처리되어 있으므로 구분됨)
@@ -484,6 +551,20 @@
       } else {
         container.innerHTML = '<div class="empty">해당 ' + what + '을(를) 찾을 수 없습니다. 다시 확인해주세요.</div>';
       }
+      return;
+    }
+
+    // 이름 조회 결과가 2건 이상이면 바로 펼치지 않고 후보를 보여줘서 선택하게 합니다. (입사일 최신순)
+    if (found.kind === 'name' && !found.forced && activeMatches.length > 1) {
+      window.__cands = activeMatches;
+      var ch = '<div class="section-title">조회된 ' + activeMatches.length + '명 중 선택해주세요</div>';
+      activeMatches.forEach(function(r, i) {
+        ch += '<div class="cand-item" onclick="pickCandidate(' + i + ')"><b>' + escapeHtml(r[COL_INFO.name]) + '</b>' +
+          (i === 0 ? ' <span class="cand-badge">최신 입사</span>' : '') +
+          '<div class="sg-meta">' + escapeHtml(candLabel(r)) + '</div></div>';
+      });
+      ch += '<button type="button" style="background:#fff; color:var(--accent); border:1px solid var(--accent);" onclick="showAllCandidates()">전체 한꺼번에 보기</button>';
+      container.innerHTML = ch;
       return;
     }
 
@@ -748,6 +829,9 @@
     html += '<hr class="divider">';
     return html;
   }
+
+  // 자동완성은 시트 데이터가 있어야 동작하므로, 모든 변수 정의가 끝난 뒤 페이지를 열 때 미리 불러옵니다.
+  loadAll(function() { setStatus(''); }, function(err) { setStatus('오류: ' + err.message); });
 </script>
 </body>
 </html>
