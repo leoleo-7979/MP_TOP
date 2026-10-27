@@ -118,8 +118,10 @@
   .status-badge {
     display: inline-block; padding: 3px 10px; border-radius: 14px;
     font-size: 12.5px; font-weight: 700; white-space: nowrap;
-    background: #fbe4ec; color: var(--warn);
+    background: #ff9800; color: #fff;
   }
+  .status-ok { color: var(--ink); font-weight: 600; }
+  tbody tr.resigning, tbody tr.resigning:nth-child(even) { background: #fff1dc; }
 
   .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-top: none; border-radius: 0 0 10px 10px; }
   table { width: 100%; border-collapse: collapse; margin-top: 4px; font-size: 14.5px; }
@@ -222,6 +224,25 @@
   };
   var DATA_START_ROW = 1;
 
+  // 시트에서 열이 추가/삭제되어도 깨지지 않도록, 헤더(항목명) 텍스트로 열 위치를 다시 찾습니다.
+  // 헤더를 못 찾은 항목은 위의 고정 번호를 그대로 씁니다.
+  function applyHeaderMap_(rows) {
+    var limit = Math.min(rows.length, 5);
+    for (var r = 0; r < limit; r++) {
+      var h = rows[r].map(function(c) { return String(c || '').replace(/\s+/g, ''); });
+      var iResign = h.indexOf('퇴사일'), iStatus = h.indexOf('재직상태');
+      if (iResign === -1 || iStatus === -1) continue;
+      COL.resignDate = iResign;
+      COL.employmentStatus = iStatus;
+      var iName = h.indexOf('성명'); if (iName !== -1) COL.name = iName;
+      var iHire = h.indexOf('입사일'); if (iHire !== -1) COL.hireDate = iHire;
+      for (var i = 0; i < h.length; i++) {
+        if (h[i].indexOf('만료') !== -1 && h[i].indexOf('계약') !== -1) { COL.contractEnd = i; break; }
+      }
+      return;
+    }
+  }
+
   // Preferred display order for 구분 (role). Roles not listed here fall
   // after these, in the order they're first encountered.
   var ROLE_ORDER = ['배당', '검수', '1차검수', '발급', '발급/건수'];
@@ -260,12 +281,12 @@
   // 시트에 적힌 재직상태 텍스트를 그대로 믿지 않고, 퇴사일과 오늘 날짜를 비교해서
   // 실제 상태를 판단합니다. (담당자가 바빠서 퇴사자 탭으로 옮기지 못했거나 재직상태
   // 텍스트를 갱신하지 못한 경우에도 이 목록에서 정확하게 제외되도록)
-  //  - 퇴사일이 없음        → 재직 (label: '', excluded: false)
+  //  - 퇴사일이 없음        → 재직 (label: '재직', excluded: false)
   //  - 퇴사일이 오늘보다 이후 → 퇴사예정 (excluded: false, 계속 포함)
   //  - 퇴사일이 오늘이거나 이전 → 퇴사 (excluded: true, 이 목록에서 제외)
   function getEffectiveStatus(resignDateStr) {
     var resign = parseDate(resignDateStr);
-    if (!resign) return { label: '', excluded: false };
+    if (!resign) return { label: '재직', excluded: false };
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     if (resign <= today) return { label: '퇴사', excluded: true };
@@ -452,7 +473,11 @@
       });
 
       // Sort rows by the same role priority; keep original relative order within a role.
+      // 퇴사예정자는 지점 표의 아래쪽으로 모읍니다.
+      function soon(r) { return getEffectiveStatus(r[COL.resignDate]).label === '퇴사예정' ? 1 : 0; }
       rows = rows.slice().sort(function(a, b) {
+        var sd = soon(a) - soon(b);
+        if (sd !== 0) return sd;
         var ra = (a[COL.role] || '').trim() || '미분류';
         var rb = (b[COL.role] || '').trim() || '미분류';
         var d = roleRank(ra) - roleRank(rb);
@@ -478,14 +503,14 @@
         // 오늘 날짜 기준으로 계산된 값입니다(getEffectiveStatus). 이미 퇴사한 사람은
         // 이 목록 자체에서 제외되므로, 여기서는 '' 또는 '퇴사예정'만 나타납니다.
         var statusLabel = getEffectiveStatus(r[COL.resignDate]).label;
-        html += '<tr>';
+        html += '<tr class="' + (statusLabel === '퇴사예정' ? 'resigning' : '') + '">';
         html += '<td>' + escapeHtml(r[COL.role] || '') + '</td>';
         html += '<td><b>' + (isPermanentEmployee(r) ? '⭐ ' : '') + escapeHtml(r[COL.name] || '') + '</b></td>';
         html += '<td>' + escapeHtml(r[COL.phone] || '') + '</td>';
         html += '<td>' + escapeHtml(r[COL.hireDate] || '') + '</td>';
         html += '<td>' + renderContractEnd(r) + '</td>';
         html += '<td>' + escapeHtml(r[COL.resignDate] || '') + '</td>';
-        html += '<td>' + (statusLabel ? '<span class="status-badge">' + statusLabel + '</span>' : '') + '</td>';
+        html += '<td>' + (statusLabel === '퇴사예정' ? '<span class="status-badge">' + statusLabel + '</span>' : (statusLabel ? '<span class="status-ok">' + statusLabel + '</span>' : '')) + '</td>';
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -498,6 +523,7 @@
   function loadAll() {
     setStatus('불러오는 중입니다...');
     fetchSheet(GID_ACTIVE, function(rows) {
+      applyHeaderMap_(rows);
       allRows = rows.slice(DATA_START_ROW).filter(function(r) {
         if (!r[COL.name] || r[COL.name].trim().length === 0) return false;
         // 오늘 날짜 기준으로 이미 퇴사일이 지난 사람은 재직중 명단에서 제외합니다.
