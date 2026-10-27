@@ -754,7 +754,11 @@
     html += '</div>';
 
     // 명단 표 — 구분(역할) 우선순위 순, 같은 구분 안에서는 이름순
+    // 재직 → 퇴사예정 → 퇴사 순으로 먼저 정렬해서, 퇴사예정/퇴사자는 표 아래쪽으로 모읍니다.
+    function statusRank(p) { return p.employmentStatus === '퇴사' ? 2 : (p.employmentStatus === '퇴사예정' ? 1 : 0); }
     matches = matches.slice().sort(function(a, b) {
+      var sd = statusRank(a) - statusRank(b);
+      if (sd !== 0) return sd;
       var ra = (a.role || '').trim();
       var rb = (b.role || '').trim();
       var d = roleRank(ra) - roleRank(rb);
