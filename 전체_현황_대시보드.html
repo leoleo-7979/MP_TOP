@@ -149,7 +149,9 @@
     font-size: 12.5px; font-weight: 700; white-space: nowrap;
     background: #fbe4ec; color: var(--warn);
   }
-  .status-badge.left { background: #ece8f0; color: var(--muted); }
+  .status-badge.left { background: #e53935; color: #fff; }
+  .status-badge.soon { background: #ff9800; color: #fff; }
+  .status-ok { color: var(--ink); font-weight: 600; }
   .month-table-scroll { overflow-x: auto; margin-top: 15px; }
   .month-table-scroll table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
   .month-table-scroll thead th {
@@ -235,7 +237,7 @@
 
   <div class="panel">
     <h2>월별 재직자 수 조회</h2>
-    <p class="sub" style="text-align:left; margin:0 0 14px; font-size:13px;">⭐ 표시는 계약만료일이 없는 무기계약·정직원입니다. (퇴사일은 퇴사자만 표시되며, 재직중인 분은 비어있습니다)<br>오늘 날짜 기준으로 이미 퇴사일이 지난 인원은 재직상태가 "퇴사"로 표시되고 현재/이후 달 조회에서는 자동으로 제외됩니다 (퇴사자 탭으로 아직 옮겨지지 않았어도 동일하게 적용됩니다).</p>
+    <p class="sub" style="text-align:left; margin:0 0 14px; font-size:13px;">⭐ 표시는 계약만료일이 없는 무기계약·정직원입니다. (퇴사일은 퇴사자·퇴사예정자만 표시되며, 재직중인 분은 비어있습니다)<br>오늘 날짜 기준으로 이미 퇴사일이 지난 인원은 재직상태가 "퇴사"로 표시되고 현재/이후 달 조회에서는 자동으로 제외됩니다 (퇴사자 탭으로 아직 옮겨지지 않았어도 동일하게 적용됩니다).</p>
     <div class="month-controls">
       <input type="month" id="monthInput">
     </div>
@@ -271,6 +273,25 @@
     employmentStatus: 21  // V 재직상태 ("재직"/"퇴사예정"/"퇴사" 등)
   };
   var DATA_START_ROW = 1;
+
+  // 시트에서 열이 추가/삭제되어도 깨지지 않도록, 헤더(항목명) 텍스트로 열 위치를 다시 찾습니다.
+  // 헤더를 못 찾은 항목은 위의 고정 번호를 그대로 씁니다.
+  function applyHeaderMap_(rows) {
+    var limit = Math.min(rows.length, 5);
+    for (var r = 0; r < limit; r++) {
+      var h = rows[r].map(function(c) { return String(c || '').replace(/\s+/g, ''); });
+      var iResign = h.indexOf('퇴사일'), iStatus = h.indexOf('재직상태');
+      if (iResign === -1 || iStatus === -1) continue;
+      COL.resignDate = iResign;
+      COL.employmentStatus = iStatus;
+      var iName = h.indexOf('성명'); if (iName !== -1) COL.name = iName;
+      var iHire = h.indexOf('입사일'); if (iHire !== -1) COL.hireDate = iHire;
+      for (var i = 0; i < h.length; i++) {
+        if (h[i].indexOf('만료') !== -1 && h[i].indexOf('계약') !== -1) { COL.contractEnd = i; break; }
+      }
+      return;
+    }
+  }
 
   // 퇴사자_명단 탭 열 구성 — 퇴사자_명단.html과 동일한 매핑
   var COL_RESIGNED = {
@@ -427,12 +448,12 @@
   // 시트에 적힌 재직상태 텍스트를 그대로 믿지 않고, 퇴사일과 오늘 날짜를 비교해서
   // 실제 상태를 판단합니다. (담당자가 바빠서 퇴사자 탭으로 옮기지 못했거나 재직상태
   // 텍스트를 갱신하지 못한 경우에도 정확하게 반영되도록)
-  //  - 퇴사일이 없음        → 재직 (label: '', excluded: false)
+  //  - 퇴사일이 없음        → 재직 (label: '재직', excluded: false)
   //  - 퇴사일이 오늘보다 이후 → 퇴사예정 (excluded: false, 계속 포함)
   //  - 퇴사일이 오늘이거나 이전 → 퇴사 (excluded: true, 재직 목록에서 제외)
   function getEffectiveStatus(resignDateStr) {
     var resign = parseDate(resignDateStr);
-    if (!resign) return { label: '', excluded: false };
+    if (!resign) return { label: '재직', excluded: false };
     var today = new Date();
     today.setHours(0, 0, 0, 0);
     if (resign <= today) return { label: '퇴사', excluded: true };
@@ -624,6 +645,7 @@
     }
 
     fetchSheet(GID_ACTIVE, function(rows) {
+      applyHeaderMap_(rows);
       activeFiltered = rows.slice(DATA_START_ROW).filter(function(r) {
         return r[COL.name] && r[COL.name].trim().length > 0;
       });
@@ -770,15 +792,15 @@
       html += '<th>구분</th><th>성명</th><th>입사일</th><th>퇴사일</th><th>재직상태</th>';
       html += '</tr></thead><tbody>';
       rows.forEach(function(p) {
-        // 퇴사예정/퇴사는 오늘 날짜 기준으로 계산된 값입니다(getEffectiveStatus). 그 외는 비워둡니다.
+        // 재직/퇴사예정/퇴사는 퇴사일과 오늘 날짜를 비교해 계산된 값입니다(getEffectiveStatus).
         var statusLabel = p.employmentStatus || '';
-        var badgeClass = statusLabel === '퇴사' ? 'status-badge left' : 'status-badge';
+        var badgeClass = statusLabel === '퇴사' ? 'status-badge left' : (statusLabel === '퇴사예정' ? 'status-badge soon' : '');
         html += '<tr>';
         html += '<td>' + escapeHtml(p.role || '') + '</td>';
         html += '<td><b>' + (p.permanent ? '⭐ ' : '') + escapeHtml(p.name || '') + '</b></td>';
         html += '<td>' + escapeHtml(p.hireDate || '') + '</td>';
         html += '<td>' + escapeHtml(p.resignDate || '') + '</td>';
-        html += '<td>' + (statusLabel ? '<span class="' + badgeClass + '">' + statusLabel + '</span>' : '') + '</td>';
+        html += '<td>' + (badgeClass ? '<span class="' + badgeClass + '">' + statusLabel + '</span>' : (statusLabel ? '<span class="status-ok">' + statusLabel + '</span>' : '')) + '</td>';
         html += '</tr>';
       });
       html += '</tbody></table></div></div>';
