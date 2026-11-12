@@ -211,6 +211,10 @@
   .mg-roles { width: 100%; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 3px; }
   .mg-role { font-size: 12.5px; font-weight: 600; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 3px 10px; }
   .mg-role b { color: var(--accent); }
+  /* 지점·업무 다중선택: 켜진 버튼 앞에 체크 표시 ("전체" 제외) */
+  .branch-btn.active:not([data-office=""])::before,
+  .role-btn.active:not([data-role=""])::before { content: "\2713  "; }
+  .multi-hint { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
 </style>
 </head>
 <body>
@@ -221,6 +225,7 @@
 
   <div class="status" id="status">불러오는 중입니다...</div>
 
+  <div class="multi-hint">지점·업무 버튼을 여러 개 눌러 함께 볼 수 있습니다. (다시 누르면 해제, "전체"를 누르면 모두 해제)</div>
   <div class="branch-row" id="branchRow">
     <button type="button" class="branch-btn active" data-office="" onclick="selectOffice('')">전체</button>
   </div>
@@ -304,10 +309,10 @@
 
   var combinedRoster = []; // {office, role, name, hireDate, resignDate(or null)}
   var activeRows = []; // 재직중(현재 활성) 원본 행 전체 (필터 적용 전)
-  var selectedOffice = '';
-  var selectedRole = '';
-  var monthSelectedOffice = '';
-  var monthSelectedRole = '';
+  var selectedOffice = [];   // 선택된 지점들 (비어 있으면 전체)
+  var selectedRole = [];     // 선택된 업무구분들 (비어 있으면 전체)
+  var monthSelectedOffice = [];
+  var monthSelectedRole = [];
   var lastMonthMatches = [];
 
   // Preferred display order for 구분 (role), matching 재직중_근무자.html
@@ -360,10 +365,11 @@
     row.innerHTML = '<button type="button" class="role-btn active" data-role="" onclick="selectRole(\'\')">전체</button>';
     var roles = {};
     activeRows.forEach(function(r) {
-      if (selectedOffice && branchLabel(r[COL.office]) !== selectedOffice) return;
+      if (selectedOffice.length && selectedOffice.indexOf(branchLabel(r[COL.office])) === -1) return;
       var role = (r[COL.role] || '').trim();
       if (role) roles[role] = true;
     });
+    selectedRole = selectedRole.filter(function(x) { return roles[x]; });
     Object.keys(roles).sort(function(a, b) {
       var d = roleRank(a) - roleRank(b);
       return d !== 0 ? d : a.localeCompare(b);
@@ -378,28 +384,38 @@
     });
   }
 
-  function selectOffice(office) {
-    selectedOffice = office;
-    document.querySelectorAll('#branchRow .branch-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-office') === office);
+  // 지점·업무 다중선택: 버튼을 누를 때마다 켜고 끄며, "전체"를 누르면 해당 줄 선택이 모두 해제됩니다.
+  function toggleIn_(list, v) {
+    var i = list.indexOf(v);
+    if (i === -1) list.push(v); else list.splice(i, 1);
+  }
+  function syncFilterButtons_() {
+    document.querySelectorAll('.branch-btn').forEach(function(btn) {
+      var o = btn.getAttribute('data-office');
+      btn.classList.toggle('active', o === '' ? selectedOffice.length === 0 : selectedOffice.indexOf(o) !== -1);
     });
-    selectedRole = '';
-    populateTopRoleFilter();
+    document.querySelectorAll('.role-btn').forEach(function(btn) {
+      var r = btn.getAttribute('data-role');
+      btn.classList.toggle('active', r === '' ? selectedRole.length === 0 : selectedRole.indexOf(r) !== -1);
+    });
+  }
+  function selectOffice(office) {
+    if (office === '') selectedOffice = []; else toggleIn_(selectedOffice, office);
+    populateTopRoleFilter(); // 선택한 지점들에 없는 업무 선택은 이 안에서 자동으로 해제됩니다.
+    syncFilterButtons_();
     render(getFilteredActiveRows());
   }
 
   function selectRole(role) {
-    selectedRole = role;
-    document.querySelectorAll('#roleRow .role-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
-    });
+    if (role === '') selectedRole = []; else toggleIn_(selectedRole, role);
+    syncFilterButtons_();
     render(getFilteredActiveRows());
   }
 
   function getFilteredActiveRows() {
     return activeRows.filter(function(r) {
-      if (selectedOffice && branchLabel(r[COL.office]) !== selectedOffice) return false;
-      if (selectedRole && (r[COL.role] || '').trim() !== selectedRole) return false;
+      if (selectedOffice.length && selectedOffice.indexOf(branchLabel(r[COL.office])) === -1) return false;
+      if (selectedRole.length && selectedRole.indexOf((r[COL.role] || '').trim()) === -1) return false;
       return true;
     });
   }
@@ -694,11 +710,16 @@
       return true;
     });
 
-    var afterOffice = selectedOffice
-      ? inMonth.filter(function(p) { return branchLabel(p.office) === selectedOffice; })
+    var afterOffice = selectedOffice.length
+      ? inMonth.filter(function(p) { return selectedOffice.indexOf(branchLabel(p.office)) !== -1; })
       : inMonth;
-    var matches = selRole
-      ? afterOffice.filter(function(p) { return (p.role || '').trim() === selRole; })
+    // 지점 선택이 바뀌어서 목록에 없어진 구분 선택은 자동으로 해제합니다.
+    monthSelectedRole = monthSelectedRole.filter(function(x) {
+      return afterOffice.some(function(p) { return (p.role || '').trim() === x; });
+    });
+    selRole = monthSelectedRole;
+    var matches = selRole.length
+      ? afterOffice.filter(function(p) { return selRole.indexOf((p.role || '').trim()) !== -1; })
       : afterOffice;
 
     var monthLabel = parts[0] + '년 ' + parseInt(parts[1], 10) + '월';
@@ -706,7 +727,7 @@
     var lastDay = monthEnd.getDate();
     var html = '<div class="month-result">';
     html += '<div class="value">' + matches.length + '명</div>';
-    html += '<div class="label">' + monthLabel + (selectedOffice ? ' · ' + escapeHtml(selectedOffice) : '') + ' 재직 인원</div>';
+    html += '<div class="label">' + monthLabel + (selectedOffice.length ? ' · ' + escapeHtml(selectedOffice.join(', ')) : '') + ' 재직 인원</div>';
     html += '<div class="month-note">';
     html += '기준: ' + monthLabel + ' 중 하루라도 재직 기간과 겹치면 포함됩니다.<br>';
     html += '예) ' + mm + '/15 입사자는 포함 · ' + mm + '/5 퇴사자는 ' + monthLabel + '까지는 포함(다음 달부터 제외)';
@@ -726,9 +747,9 @@
     });
     officeOrder.sort(function(a, b) { return officeCounts[b] - officeCounts[a]; });
     html += '<div class="office-chips" style="margin-top:12px;">';
-    html += '<span class="month-office-chip' + (selectedOffice === '' ? ' active' : '') + '" onclick="selectMonthOffice(\'\')">전체 ' + inMonth.length + '</span> ';
+    html += '<span class="month-office-chip' + (selectedOffice.length === 0 ? ' active' : '') + '" onclick="selectMonthOffice(\'\')">전체 ' + inMonth.length + '</span> ';
     officeOrder.forEach(function(o) {
-      var isActive = selectedOffice === o;
+      var isActive = selectedOffice.indexOf(o) !== -1;
       html += '<span class="month-office-chip' + (isActive ? ' active' : '') + '" onclick="selectMonthOffice(\'' + o.replace(/'/g, "\\'") + '\')">' + escapeHtml(o) + ' ' + officeCounts[o] + '</span> ';
     });
     html += '</div>';
@@ -746,9 +767,9 @@
       return d !== 0 ? d : roleCountsMonth[b] - roleCountsMonth[a];
     });
     html += '<div class="office-chips" style="margin-top:8px;">';
-    html += '<span class="month-role-chip' + (selRole === '' ? ' active' : '') + '" onclick="selectMonthRole(\'\')">전체 ' + afterOffice.length + '</span> ';
+    html += '<span class="month-role-chip' + (selRole.length === 0 ? ' active' : '') + '" onclick="selectMonthRole(\'\')">전체 ' + afterOffice.length + '</span> ';
     roleOrderMonth.forEach(function(role) {
-      var isActive = selRole === role;
+      var isActive = selRole.indexOf(role) !== -1;
       html += '<span class="month-role-chip' + (isActive ? ' active' : '') + '" onclick="selectMonthRole(\'' + role.replace(/'/g, "\\'") + '\')">' + escapeHtml(role) + ' ' + roleCountsMonth[role] + '</span> ';
     });
     html += '</div>';
@@ -814,13 +835,12 @@
   }
 
   function selectMonthOffice(office) {
-    monthSelectedOffice = (monthSelectedOffice === office) ? '' : office;
-    monthSelectedRole = ''; // 지점을 바꾸면 구분 선택은 초기화합니다.
-    renderMonthLookup();
+    if (office === '') monthSelectedOffice = []; else toggleIn_(monthSelectedOffice, office);
+    renderMonthLookup(); // 선택한 지점들에 없는 구분 선택은 이 안에서 자동 해제됩니다.
   }
 
   function selectMonthRole(role) {
-    monthSelectedRole = (monthSelectedRole === role) ? '' : role;
+    if (role === '') monthSelectedRole = []; else toggleIn_(monthSelectedRole, role);
     renderMonthLookup();
   }
 

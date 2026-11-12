@@ -168,6 +168,10 @@
     .empty { font-size: 16px; }
     .back-home { padding: 14px; border-radius: 14px; font-size: 15.5px; }
   }
+  /* 지점·업무 다중선택: 켜진 버튼 앞에 체크 표시 ("전체" 제외) */
+  .branch-btn.active:not([data-office=""])::before,
+  .role-btn.active:not([data-role=""])::before { content: "\2713  "; }
+  .multi-hint { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
 </style>
 </head>
 <body>
@@ -180,7 +184,8 @@
     <div class="controls">
       <input type="text" id="searchInput" placeholder="이름 또는 연락처로 검색" autocomplete="off">
     </div>
-    <div class="branch-row" id="branchRow">
+    <div class="multi-hint">지점·업무 버튼을 여러 개 눌러 함께 볼 수 있습니다. (다시 누르면 해제, "전체"를 누르면 모두 해제)</div>
+<div class="branch-row" id="branchRow">
       <button type="button" class="branch-btn active" data-office="" onclick="selectOffice('')">전체</button>
     </div>
     <div class="role-row" id="roleRow">
@@ -253,8 +258,8 @@
   }
 
   var allRows = [];
-  var selectedOffice = '';
-  var selectedRole = '';
+  var selectedOffice = [];   // 선택된 지점들 (비어 있으면 전체)
+  var selectedRole = [];     // 선택된 업무구분들 (비어 있으면 전체)
 
   // 지점명에 괄호가 있으면("광주(전주)") 괄호 앞부분을 대표 지점명으로 사용합니다.
   // 지점 버튼은 이 대표 이름 기준으로 중복 없이 하나만 만들고, 그 버튼을 누르면
@@ -359,13 +364,25 @@
     });
   }
 
-  function selectOffice(office) {
-    selectedOffice = office;
+  // 지점·업무 다중선택: 버튼을 누를 때마다 켜고 끄며, "전체"를 누르면 해당 줄 선택이 모두 해제됩니다.
+  function toggleIn_(list, v) {
+    var i = list.indexOf(v);
+    if (i === -1) list.push(v); else list.splice(i, 1);
+  }
+  function syncFilterButtons_() {
     document.querySelectorAll('.branch-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-office') === office);
+      var o = btn.getAttribute('data-office');
+      btn.classList.toggle('active', o === '' ? selectedOffice.length === 0 : selectedOffice.indexOf(o) !== -1);
     });
-    selectedRole = '';
-    populateRoleFilter();
+    document.querySelectorAll('.role-btn').forEach(function(btn) {
+      var r = btn.getAttribute('data-role');
+      btn.classList.toggle('active', r === '' ? selectedRole.length === 0 : selectedRole.indexOf(r) !== -1);
+    });
+  }
+  function selectOffice(office) {
+    if (office === '') selectedOffice = []; else toggleIn_(selectedOffice, office);
+    populateRoleFilter(); // 선택한 지점들에 없는 업무 선택은 이 안에서 자동으로 해제됩니다.
+    syncFilterButtons_();
     render();
   }
 
@@ -374,10 +391,11 @@
     row.innerHTML = '<button type="button" class="role-btn active" data-role="" onclick="selectRole(\'\')">전체</button>';
     var roles = {};
     allRows.forEach(function(r) {
-      if (selectedOffice && branchLabel(r[COL.office]) !== selectedOffice) return;
+      if (selectedOffice.length && selectedOffice.indexOf(branchLabel(r[COL.office])) === -1) return;
       var role = (r[COL.role] || '').trim();
       if (role) roles[role] = true;
     });
+    selectedRole = selectedRole.filter(function(x) { return roles[x]; });
     Object.keys(roles).sort(function(a, b) {
       var d = roleRank(a) - roleRank(b);
       return d !== 0 ? d : a.localeCompare(b);
@@ -393,10 +411,8 @@
   }
 
   function selectRole(role) {
-    selectedRole = role;
-    document.querySelectorAll('.role-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
-    });
+    if (role === '') selectedRole = []; else toggleIn_(selectedRole, role);
+    syncFilterButtons_();
     render();
   }
 
@@ -424,8 +440,8 @@
     var q = document.getElementById('searchInput').value.trim();
 
     return allRows.filter(function(r) {
-      if (selectedOffice && branchLabel(r[COL.office]) !== selectedOffice) return false;
-      if (selectedRole && (r[COL.role] || '').trim() !== selectedRole) return false;
+      if (selectedOffice.length && selectedOffice.indexOf(branchLabel(r[COL.office])) === -1) return false;
+      if (selectedRole.length && selectedRole.indexOf((r[COL.role] || '').trim()) === -1) return false;
       if (!q) return true;
       var name = (r[COL.name] || '');
       var phone = (r[COL.phone] || '');

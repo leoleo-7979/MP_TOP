@@ -146,6 +146,10 @@
     .empty { font-size: 16px; }
     .back-home { padding: 14px; border-radius: 14px; font-size: 15.5px; }
   }
+  /* 지점·업무 다중선택: 켜진 버튼 앞에 체크 표시 ("전체" 제외) */
+  .branch-btn.active:not([data-office=""])::before,
+  .role-btn.active:not([data-role=""])::before { content: "\2713  "; }
+  .multi-hint { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
 </style>
 </head>
 <body>
@@ -163,7 +167,8 @@
       <input type="month" id="monthInput">
       <button type="button" class="month-clear-btn" onclick="clearMonth()">월 조건 해제</button>
     </div>
-    <div class="branch-row" id="branchRow">
+    <div class="multi-hint">지점·업무 버튼을 여러 개 눌러 함께 볼 수 있습니다. (다시 누르면 해제, "전체"를 누르면 모두 해제)</div>
+<div class="branch-row" id="branchRow">
       <button type="button" class="branch-btn active" data-office="" onclick="selectOffice('')">전체</button>
     </div>
     <div class="role-row" id="roleRow">
@@ -314,8 +319,8 @@
   }
 
   var allRows = [];
-  var selectedOffice = '';
-  var selectedRole = '';
+  var selectedOffice = [];   // 선택된 지점들 (비어 있으면 전체)
+  var selectedRole = [];     // 선택된 업무구분들 (비어 있으면 전체)
   var selectedMonth = ''; // 'YYYY-MM' 형식, 비어있으면 전체 기간
 
   // 여러 날짜 표기("2026-09-30", "2026. 9. 30" 등)를 모두 인식하기 위한 파서.
@@ -391,13 +396,25 @@
     });
   }
 
-  function selectOffice(office) {
-    selectedOffice = office;
+  // 지점·업무 다중선택: 버튼을 누를 때마다 켜고 끄며, "전체"를 누르면 해당 줄 선택이 모두 해제됩니다.
+  function toggleIn_(list, v) {
+    var i = list.indexOf(v);
+    if (i === -1) list.push(v); else list.splice(i, 1);
+  }
+  function syncFilterButtons_() {
     document.querySelectorAll('.branch-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-office') === office);
+      var o = btn.getAttribute('data-office');
+      btn.classList.toggle('active', o === '' ? selectedOffice.length === 0 : selectedOffice.indexOf(o) !== -1);
     });
-    selectedRole = '';
-    populateRoleFilter();
+    document.querySelectorAll('.role-btn').forEach(function(btn) {
+      var r = btn.getAttribute('data-role');
+      btn.classList.toggle('active', r === '' ? selectedRole.length === 0 : selectedRole.indexOf(r) !== -1);
+    });
+  }
+  function selectOffice(office) {
+    if (office === '') selectedOffice = []; else toggleIn_(selectedOffice, office);
+    populateRoleFilter(); // 선택한 지점들에 없는 업무 선택은 이 안에서 자동으로 해제됩니다.
+    syncFilterButtons_();
     render();
   }
 
@@ -406,10 +423,11 @@
     row.innerHTML = '<button type="button" class="role-btn active" data-role="" onclick="selectRole(\'\')">전체</button>';
     var roles = {};
     allRows.forEach(function(r) {
-      if (selectedOffice && branchLabel(r[COL.office]) !== selectedOffice) return;
+      if (selectedOffice.length && selectedOffice.indexOf(branchLabel(r[COL.office])) === -1) return;
       var role = (r[COL.role] || '').trim();
       if (role) roles[role] = true;
     });
+    selectedRole = selectedRole.filter(function(x) { return roles[x]; });
     Object.keys(roles).sort().forEach(function(role) {
       var btn = document.createElement('button');
       btn.type = 'button';
@@ -422,10 +440,8 @@
   }
 
   function selectRole(role) {
-    selectedRole = role;
-    document.querySelectorAll('.role-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
-    });
+    if (role === '') selectedRole = []; else toggleIn_(selectedRole, role);
+    syncFilterButtons_();
     render();
   }
 
@@ -434,8 +450,8 @@
     var qDigits = q.replace(/[^0-9]/g, '');
 
     return allRows.filter(function(r) {
-      if (selectedOffice && branchLabel(r[COL.office]) !== selectedOffice) return false;
-      if (selectedRole && (r[COL.role] || '').trim() !== selectedRole) return false;
+      if (selectedOffice.length && selectedOffice.indexOf(branchLabel(r[COL.office])) === -1) return false;
+      if (selectedRole.length && selectedRole.indexOf((r[COL.role] || '').trim()) === -1) return false;
       if (selectedMonth) {
         var d = parseDate(r[COL.resignDate]);
         if (!d) return false;
