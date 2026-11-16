@@ -187,7 +187,7 @@
       <label style="flex:1; text-align:center; padding:10px; border:1px solid var(--line); border-radius:10px; cursor:pointer; font-weight:700; background:#fff;"><input type="radio" name="mode" value="resigned" onchange="onModeChange()"> 퇴사자</label>
     </div>
     <div style="position:relative;">
-      <input type="text" id="nameInput" placeholder="이름 또는 전화번호 입력 (예: 홍길동 / 010-1234-5678)" autocomplete="off">
+      <input type="text" id="nameInput" placeholder="이름 또는 전화번호 끝 4자리 입력 (예: 홍길동 / 5678)" autocomplete="off">
       <div id="suggestBox" class="suggest-box"></div>
     </div>
     <div class="notice">※ 프리랜서, 건수제 매니저는 월차/연차가 생성되지 않습니다.</div>
@@ -319,7 +319,7 @@
     setStatus('시트에서 데이터를 불러오는 중입니다...');
     document.getElementById('searchBtn').disabled = true;
 
-    var pending = 2;
+    var pending = 1;
     var failed = false;
 
     function checkDone() {
@@ -337,26 +337,30 @@
       onError(err);
     }
 
-    fetchSheet(GID_INFO, function(rows) {
-      var header = findHeaderRow_(rows);
-      if (!header) {
-        fail(new Error('시트에서 헤더(항목명) 행을 찾지 못했습니다.'));
-        return;
-      }
+    // 매니저용 전용 조회: 필요한 열만, 연락처는 끝 4자리만 내려옵니다. (접근 키 불필요)
+    var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var timer = setTimeout(function() { if (ctrl) ctrl.abort(); }, 30000);
+    fetch(DASHBOARD_WEBAPP_URL + '?action=leaveData', ctrl ? { signal: ctrl.signal } : undefined).then(function(res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function(data) {
+      clearTimeout(timer);
+      if (!data || !data.ok) throw new Error((data && data.error) || '시트 응답 오류');
+      var header = findHeaderRow_(data.info);
+      if (!header) throw new Error('시트에서 헤더(항목명) 행을 찾지 못했습니다.');
       COL_INFO = header.colMap;
       INFO_DATA_START_ROW = header.dataStartRow;
-      infoRows = rows.slice(INFO_DATA_START_ROW).filter(function(row) {
+      infoRows = data.info.slice(INFO_DATA_START_ROW).filter(function(row) {
         return row[COL_INFO.name] && row[COL_INFO.name].trim().length > 0;
       });
-      checkDone();
-    }, fail, 2);
-
-    fetchSheet(GID_HISTORY, function(rows) {
-      histRows = rows.slice(HIST_DATA_START_ROW).filter(function(row) {
+      histRows = data.hist.slice(HIST_DATA_START_ROW).filter(function(row) {
         return row[COL_HIST.name] && row[COL_HIST.name].trim().length > 0 && row[COL_HIST.startDate] && row[COL_HIST.startDate].trim().length > 0;
       });
       checkDone();
-    }, fail, 0);
+    }).catch(function(err) {
+      clearTimeout(timer);
+      fail(err && err.name === 'AbortError' ? new Error('응답 시간이 초과되었습니다.') : (err instanceof Error ? err : new Error(String(err))));
+    });
   }
 
   function doSearch() {
@@ -400,12 +404,12 @@
   }
 
   function findByPhone(rows, query) {
-    var digits = normalizeDigits(query);
+    // 연락처는 보안상 끝 4자리만 내려오므로, 입력한 번호의 끝 4자리와 비교합니다.
+    var digits = normalizeDigits(query).slice(-4);
     var matches = [];
     for (var i = 0; i < rows.length; i++) {
       var phone = normalizeDigits(rows[i][COL_INFO.phone]);
-      if (!phone) continue;
-      if (phone === digits || phone.indexOf(digits) !== -1) matches.push(rows[i]);
+      if (phone && phone === digits) matches.push(rows[i]);
     }
     return matches;
   }
@@ -706,7 +710,7 @@
   function downloadResult() {
     if (!lastBlocks.length) { alert('내려받을 조회 결과가 없습니다.'); return; }
     if (typeof XLSX === 'undefined') { alert('엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인해주세요.'); return; }
-    var sum = [['이름','지점','업무구분','재직구분','연락처','입사일','퇴사일','잔여 월차','잔여 연차','비고']];
+    var sum = [['이름','지점','업무구분','재직구분','연락처(끝 4자리)','입사일','퇴사일','잔여 월차','잔여 연차','비고']];
     var det = [['이름','지점','번호','시작일','종료일','일수','종류','비고']];
     lastBlocks.forEach(function(b) {
       sum.push([b.name, b.branch, b.role, b.resigned ? '퇴사' : (b.resignPlan ? '재직(퇴사예정)' : '재직'), b.phone, b.hireDate, b.resignDate, b.monthly, b.annual, b.note]);

@@ -248,9 +248,25 @@
   // 시트에 누군가 일반 "필터"를 걸어도 항상 전체 데이터를 보도록, 구글 gviz 대신
   // Apps Script 백엔드(action=getSheetData)를 거쳐 읽습니다. (Code.gs의 ALLOWED_READ_SHEETS에 등록된 탭만 허용)
   var DASHBOARD_WEBAPP_URL = 'https://script.google.com/macros/s/AKfycbxUBGesJFSJo_Eatdwao6riV2Vl12q8JbwFaCUtUYjKD-fYnkXhZpTn4SJtfTEt7cLxqA/exec';
-  function fetchSheet(gid, onDone, onError, headersCount) {
+
+  // ---- 접근 키 ----
+  // 서버(Code.gs)에 스크립트 속성 READ_KEY 가 설정되어 있으면, 키가 맞는 요청에만 시트 데이터를 돌려줍니다.
+  // 키는 이 브라우저(localStorage)에 저장되어 같은 주소의 다른 페이지와 공유되고, 서버가 키를 요구할 때만 입력창이 뜹니다.
+  var READ_KEY_STORE = 'mp_read_key';
+  var keyAsked_ = false;
+  function getReadKey_() { try { return localStorage.getItem(READ_KEY_STORE) || ''; } catch (e) { return ''; } }
+  function setReadKey_(k) { try { if (k) localStorage.setItem(READ_KEY_STORE, k); else localStorage.removeItem(READ_KEY_STORE); } catch (e) {} }
+  function askReadKey_() {
+    var k = window.prompt('접근 키를 입력해 주세요.');
+    k = k === null ? '' : String(k).trim();
+    setReadKey_(k);
+    return k;
+  }
+
+  function fetchSheet(gid, onDone, onError, headersCount, retried) {
     var url = DASHBOARD_WEBAPP_URL + '?action=getSheetData' +
-      '&sheetId=' + encodeURIComponent(SHEET_ID) + '&gid=' + encodeURIComponent(gid);
+      '&sheetId=' + encodeURIComponent(SHEET_ID) + '&gid=' + encodeURIComponent(gid) +
+      '&key=' + encodeURIComponent(getReadKey_());
     var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
     var timer = setTimeout(function() { if (ctrl) ctrl.abort(); }, 30000);
     fetch(url, ctrl ? { signal: ctrl.signal } : undefined).then(function(res) {
@@ -258,6 +274,15 @@
       return res.json();
     }).then(function(data) {
       clearTimeout(timer);
+      if (data && data.code === 'AUTH') {
+        if (!retried) {
+          if (!keyAsked_) { keyAsked_ = true; askReadKey_(); } // 동시에 여러 번 요청돼도 입력창은 한 번만
+          if (getReadKey_()) { fetchSheet(gid, onDone, onError, headersCount, true); return; }
+        } else {
+          setReadKey_(''); // 틀린 키는 지워서 다음에 다시 묻게 합니다
+        }
+        throw new Error('접근 키가 필요하거나 올바르지 않습니다. 새로고침 후 다시 입력해 주세요.');
+      }
       if (!data || !data.ok) throw new Error((data && data.error) || '시트 응답 오류');
       onDone(data.rows);
     }).catch(function(err) {
