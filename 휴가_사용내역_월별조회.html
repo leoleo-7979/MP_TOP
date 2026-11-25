@@ -178,6 +178,12 @@
     <div class="role-row" id="roleRow">
       <button type="button" class="role-btn active" data-role="" onclick="selectRole('')">전체</button>
     </div>
+    <div class="unpaid-row" style="margin-top:10px; display:flex; align-items:center;">
+      <label style="display:flex; align-items:center; gap:7px; font-size:14px; font-weight:700; color:var(--ink); cursor:pointer;">
+        <input type="checkbox" id="unpaidOnly" onchange="if (currentMonth) render(currentMonth)" style="width:17px; height:17px; accent-color: var(--warn);">
+        무급휴가만 보기
+      </label>
+    </div>
     <div class="toolbar-row">
       <button type="button" class="excel-btn" onclick="downloadExcel()">⬇ 엑셀 다운로드</button>
     </div>
@@ -458,6 +464,7 @@
           if ((phoneById[id] || '').indexOf(digits) === -1) return false;
         } else if ((row[COL_HIST.name] || '').replace(/\s+/g, '').indexOf(q.replace(/\s+/g, '')) === -1) return false;
       }
+      if (document.getElementById('unpaidOnly').checked && (row[COL_HIST.note] || '').indexOf('무급') === -1) return false;
       return true;
     });
 

@@ -112,6 +112,11 @@
   .resign-soon-badge { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 700; background: #ff9800; color: #fff; white-space: nowrap; }
   .resigned-badge { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 12.5px; font-weight: 700; background: #e53935; color: #fff; white-space: nowrap; }
   tbody tr.resigning, tbody tr.resigning:nth-child(even) { background: #fff1dc; }
+  .expire-badge { display: inline-block; padding: 3px 10px; border-radius: 14px; font-size: 12px; font-weight: 800; color: #fff; white-space: nowrap; }
+  .expire-badge.caution { background: #e08a1e; }
+  .expire-badge.urgent { background: #e0453f; }
+  tbody tr.warn-caution, tbody tr.warn-caution:nth-child(even) { background: #fdf0dc; }
+  tbody tr.warn-urgent, tbody tr.warn-urgent:nth-child(even) { background: #fce3e2; }
   .annual-badge {
     display: inline-block; padding: 3px 11px; border-radius: 14px;
     font-size: 13px; font-weight: 800; background: var(--accent-soft); color: var(--accent);
@@ -281,6 +286,42 @@
     return st.indexOf('퇴사예정') !== -1;
   }
   function statusText(r) { return isResigned(r) ? '퇴사' : (isResignSoon(r) ? '퇴사예정' : '재직'); }
+
+  // ---- 소진 기한 경고 ----
+  // 월차: 입사일 + 1년이 기한 (입사 후 첫 1년 동안만 해당)
+  // 연차: 1년차 이상은 '다음 입사기념일'이 기한 (매년 반복)
+  // 기한까지 60일 이하 & 잔여 1일 이상이면 경고 (31~60일: 주의, 30일 이하: 긴급). 퇴사자는 제외.
+  function addYears_(d, n) {
+    var x = new Date(d.getFullYear() + n, d.getMonth(), d.getDate());
+    if (x.getMonth() !== d.getMonth()) x = new Date(d.getFullYear() + n, d.getMonth() + 1, 0); // 2/29 → 2/28
+    return x;
+  }
+  function expiryWarn(r, kind, remainStr) {
+    if (isResigned(r)) return null;
+    var remain = parseFloat(remainStr) || 0;
+    if (remain < 1) return null;
+    var hd = parseYMD(r[COL_INFO.hireDate]);
+    if (!hd) return null;
+    var today = new Date(); today.setHours(0, 0, 0, 0);
+    var oneYear = addYears_(hd, 1), deadline;
+    if (kind === 'monthly') {
+      if (today >= oneYear) return null;
+      deadline = oneYear;
+    } else {
+      if (today < oneYear) return null;
+      var n = today.getFullYear() - hd.getFullYear();
+      deadline = addYears_(hd, n);
+      if (deadline <= today) deadline = addYears_(hd, n + 1);
+    }
+    var dday = Math.round((deadline - today) / 86400000);
+    if (dday > 60) return null;
+    return { dday: dday, level: dday <= 30 ? 'urgent' : 'caution' };
+  }
+  function warnBadgeHtml(w) {
+    if (!w) return '';
+    return ' <span class="expire-badge ' + w.level + '">' + (w.level === 'urgent' ? '⛔' : '⚠') + ' D-' + w.dday + ' 소진 필요</span>';
+  }
+  function warnText(w) { return w ? 'D-' + w.dday + (w.level === 'urgent' ? ' (긴급)' : ' (주의)') : ''; }
   var selectedOffice = '';
   var selectedRole = '';
 
@@ -465,15 +506,18 @@
       rows.forEach(function(r) {
         var bal = balanceOf(r);
         var st = statusText(r);
-        html += '<tr class="' + (st === '퇴사예정' ? 'resigning' : '') + '">';
+        var wM = expiryWarn(r, 'monthly', bal.monthly), wA = expiryWarn(r, 'annual', bal.annual);
+        var rowCls = (st === '퇴사예정' ? 'resigning' : '');
+        if (wM || wA) rowCls = ((wM && wM.level === 'urgent') || (wA && wA.level === 'urgent')) ? 'warn-urgent' : 'warn-caution';
+        html += '<tr class="' + rowCls + '">';
         html += '<td>' + escapeHtml(r[COL_INFO.role] || '') + '</td>';
         html += '<td><b>' + escapeHtml(r[COL_INFO.name] || '') + '</b></td>';
         html += '<td>' + (st === '퇴사' ? '<span class="resigned-badge">퇴사</span>' : (st === '퇴사예정' ? '<span class="resign-soon-badge">퇴사예정</span>' : '재직')) + '</td>';
         html += '<td>' + escapeHtml(r[COL_INFO.phone] || '') + '</td>';
         html += '<td>' + escapeHtml(r[COL_INFO.hireDate] || '') + '</td>';
         html += '<td>' + escapeHtml(r[COL_INFO.resignDate] || '') + '</td>';
-        html += '<td><span class="monthly-badge">' + escapeHtml(bal.monthly) + '일</span></td>';
-        html += '<td><span class="annual-badge">' + escapeHtml(bal.annual) + '일</span></td>';
+        html += '<td><span class="monthly-badge">' + escapeHtml(bal.monthly) + '일</span>' + warnBadgeHtml(wM) + '</td>';
+        html += '<td><span class="annual-badge">' + escapeHtml(bal.annual) + '일</span>' + warnBadgeHtml(wA) + '</td>';
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -517,7 +561,7 @@
   function downloadExcel() {
     var rows = getFilteredRows();
     if (rows.length === 0) { alert('내려받을 데이터가 없습니다.'); return; }
-    var aoa = [['지점', '구분', '성명', '재직구분', '연락처', '입사일', '퇴사일', '잔여 월차', '잔여 연차']];
+    var aoa = [['지점', '구분', '성명', '재직구분', '연락처', '입사일', '퇴사일', '잔여 월차', '월차 소진기한', '잔여 연차', '연차 소진기한']];
     rows.forEach(function(r) {
       var bal = balanceOf(r);
       aoa.push([
@@ -529,7 +573,9 @@
         r[COL_INFO.hireDate] || '',
         r[COL_INFO.resignDate] || '',
         bal.monthly,
-        bal.annual
+        warnText(expiryWarn(r, 'monthly', bal.monthly)),
+        bal.annual,
+        warnText(expiryWarn(r, 'annual', bal.annual))
       ]);
     });
     var ws = XLSX.utils.aoa_to_sheet(aoa);
