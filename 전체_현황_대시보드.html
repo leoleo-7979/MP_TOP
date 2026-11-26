@@ -292,6 +292,12 @@
       COL.employmentStatus = iStatus;
       var iName = h.indexOf('성명'); if (iName !== -1) COL.name = iName;
       var iHire = h.indexOf('입사일'); if (iHire !== -1) COL.hireDate = iHire;
+      // 지점·구분·연락처·계약기간도 열 제목으로 찾습니다. (지점 열 제목이 영문 office 여도 인식)
+      function idxOf_(names) { for (var n = 0; n < names.length; n++) { var k = h.map(function(x) { return x.toLowerCase(); }).indexOf(names[n]); if (k !== -1) return k; } return -1; }
+      var iOff = idxOf_(['지점', '지점명', 'office', '센터']); if (iOff !== -1) COL.office = iOff;
+      var iRole = idxOf_(['구분', '업무구분']); if (iRole !== -1) COL.role = iRole;
+      var iPhone = idxOf_(['연락처', '전화번호']); if (iPhone !== -1 && COL.phone !== undefined) COL.phone = iPhone;
+      var iTerm = idxOf_(['정해진계약기간']); if (iTerm !== -1 && COL.contractTerm !== undefined) COL.contractTerm = iTerm;
       for (var i = 0; i < h.length; i++) {
         if (h[i].indexOf('만료') !== -1 && h[i].indexOf('계약') !== -1) { COL.contractEnd = i; break; }
       }
