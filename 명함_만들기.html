@@ -195,7 +195,9 @@
     </div>
 
     <div class="step-label">2. 근무 센터</div>
-    <div class="branch-row" id="branchRow" style="margin-top:0"></div>
+    <div class="multi-hint" style="margin-top:0">센터를 여러 개 눌러 함께 볼 수 있습니다. (다시 누르면 해제, 아무것도 안 고르면 전체 직원)</div>
+    <div class="branch-row" id="branchRow" style="margin-top:8px"></div>
+    <div id="addrPick" style="display:none"></div>
 
     <div class="step-label">3. 직원 선택</div>
     <div class="controls"><input type="text" id="searchInput" placeholder="이름 또는 연락처로 검색" autocomplete="off"></div>
@@ -223,7 +225,7 @@
 
   var emps = [];          // {name, phone, email, team, office, status, addr, fax}
   var centers = {};       // label -> {addr, fax}
-  var selCenter = '';
+  var selCenters = [], addrCenter = '';
   var selEmp = null;
   var photoImg = null, photoFile = '';
   var logoImg = new Image(); logoImg.src = LOGO_SRC;
@@ -294,17 +296,41 @@
   function renderCenters(){
     var row=$('branchRow'); row.innerHTML='';
     Object.keys(centers).sort(function(a,b){return a.localeCompare(b,'ko');}).forEach(function(c){
-      var b=document.createElement('button'); b.type='button'; b.className='branch-btn'+(c===selCenter?' active':''); b.textContent=c;
-      b.onclick=function(){ selCenter=(selCenter===c)?'':c; renderCenters(); draw(); };
+      var b=document.createElement('button'); b.type='button'; b.className='branch-btn'+(selCenters.indexOf(c)!==-1?' active':''); b.textContent=c;
+      b.onclick=function(){ var i=selCenters.indexOf(c); if(i===-1) selCenters.push(c); else selCenters.splice(i,1); renderCenters(); renderEmps(); draw(); };
       row.appendChild(b);
     });
+    renderAddrPick();
+  }
+  // 센터를 2개 이상 고른 경우에만, 명함에 넣을 주소·팩스의 센터를 따로 고릅니다.
+  function effectiveCenter(){
+    if(!selEmp) return '';
+    if(selCenters.length===0) return selEmp.office;
+    if(selCenters.length===1) return selCenters[0];
+    if(selCenters.indexOf(addrCenter)!==-1) return addrCenter;
+    return selCenters.indexOf(selEmp.office)!==-1 ? selEmp.office : selCenters[0];
+  }
+  function renderAddrPick(){
+    var box=$('addrPick');
+    if(selCenters.length<2){ box.style.display='none'; box.innerHTML=''; return; }
+    box.style.display='block'; box.innerHTML='';
+    var lab=document.createElement('div'); lab.className='multi-hint'; lab.textContent='명함에 넣을 주소·팩스는 어느 센터 기준인가요?'; box.appendChild(lab);
+    var row=document.createElement('div'); row.className='branch-row'; row.style.marginTop='8px';
+    var cur=effectiveCenter();
+    selCenters.forEach(function(c){
+      var b=document.createElement('button'); b.type='button'; b.className='branch-btn'+(c===cur?' active':''); b.textContent=c;
+      b.onclick=function(){ addrCenter=c; renderAddrPick(); draw(); }; row.appendChild(b);
+    });
+    box.appendChild(row);
   }
   function renderEmps(){
     var q=$('searchInput').value.trim().toLowerCase(), qd=q.replace(/[^0-9]/g,'');
     var list=emps.filter(function(e){
+      if(selCenters.length && selCenters.indexOf(e.office)===-1) return false;
       if(!q) return true;
       return e.name.toLowerCase().indexOf(q)!==-1 || (qd && e.phone.replace(/[^0-9]/g,'').indexOf(qd)!==-1);
     }).sort(function(a,b){return a.name.localeCompare(b.name,'ko');});
+    if(selEmp && list.indexOf(selEmp)===-1){ selEmp=null; }
     var sel=$('empSelect'); sel.innerHTML='';
     var ph=document.createElement('option'); ph.value=''; ph.textContent='직원을 선택하세요 ('+list.length+'명)'; sel.appendChild(ph);
     list.forEach(function(e,i){
@@ -323,7 +349,7 @@
   }
   function cardData(){
     if(!selEmp) return null;
-    var c=centers[selCenter]||centers[selEmp.office]||{};
+    var c=centers[effectiveCenter()]||centers[selEmp.office]||{};
     var addr=c.addr||selEmp.addr||'', fax=c.fax||selEmp.fax||'';
     return {name:selEmp.name, phone:selEmp.phone, email:selEmp.email, team:selEmp.team, addr:addr, fax:fax};
   }
@@ -367,7 +393,7 @@
     var ok=!!(photoImg && d);
     $('btnPng').disabled=!ok; $('btnPdf').disabled=!ok;
     var m=[]; if(!photoImg) m.push('신분증 사진을 선택해 주세요.'); if(!d) m.push('직원을 선택해 주세요.');
-    if(d && !d.addr) m.push('센터를 선택하지 않아 주소·팩스가 비어 있습니다.');
+    if(d && !d.addr) m.push('이 센터에 주소·팩스가 입력되어 있지 않습니다.');
     $('msg').textContent=m.join(' ');
   }
 
@@ -395,15 +421,14 @@
   $('searchInput').addEventListener('input',renderEmps);
   $('empSelect').addEventListener('change',function(){
     var v=$('empSelect').value; selEmp=v===''?null:emps[Number(v)];
-    if(selEmp && !selCenter && centers[selEmp.office]){ selCenter=selEmp.office; renderCenters(); }
-    draw();
+    addrCenter=''; renderAddrPick(); draw();
   });
 
   draw();
   fetchSheet(GID_INFO,function(rows){
     try{ var p=parseInfo(rows); emps=p.emps; centers=p.centers; }
     catch(e){ setStatus('오류: '+e.message); return; }
-    setStatus('재직 중인 직원 '+emps.length+'명 · 센터를 고르면 그 센터의 주소·팩스가 명함에 들어갑니다.');
+    setStatus('재직 중인 직원 '+emps.length+'명 · 센터를 고르면 그 센터 직원만 목록에 나오고, 그 센터의 주소·팩스가 명함에 들어갑니다.');
     renderCenters(); renderEmps(); draw();
     if(document.fonts&&document.fonts.ready) document.fonts.ready.then(draw);
   },function(err){ setStatus('오류: '+err.message); });
