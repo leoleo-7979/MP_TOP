@@ -348,7 +348,16 @@
       }
       if (!dup) merged.push(p);
     });
-    return merged;
+    // 입사한 달에 바로 퇴사(또는 퇴사예정)한 사람은 같은 사람이 두 줄 나오지 않도록 퇴사 기록만 남깁니다.
+    function ymOf(v) { var d = parseDate(v); return d ? d.getFullYear() + '-' + (d.getMonth() + 1) : ''; }
+    var outKeys = {};
+    merged.forEach(function(r) {
+      if (r._kind === 'out') outKeys[baseName(r[COL.name]) + '|' + String(r[COL.hireDate] || '').trim() + '|' + ymOf(r[COL.resignDate])] = true;
+    });
+    return merged.filter(function(r) {
+      if (r._kind !== 'in') return true;
+      return !outKeys[baseName(r[COL.name]) + '|' + String(r[COL.hireDate] || '').trim() + '|' + ymOf(r[COL.hireDate])];
+    });
   }
 
   var allRows = [];
