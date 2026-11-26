@@ -78,6 +78,16 @@
   }
   .branch-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 
+  .status-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+  .row-label { font-size: 13px; font-weight: 700; color: var(--accent); margin-right: 2px; }
+  .st-btn {
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
+    padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fdf9fe; color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .st-btn.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .st-btn.on-orange { background: #ff9800; border-color: #ff9800; color: #fff; }
+  .st-btn.on-red { background: #e53935; border-color: #e53935; color: #fff; }
   .role-row { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 10px; }
   .role-btn {
     font-family: var(--sans); font-size: 13px; font-weight: 700;
@@ -177,10 +187,13 @@
 
   <div class="panel">
     <div class="controls">
-      <select id="statusFilter" onchange="render()" style="font-size:15px; padding:11px; border:1px solid var(--line); border-radius:12px; background:#fff; margin-bottom:8px; width:100%;">
-        <option value="active">재직자</option><option value="all">전체</option><option value="resigned">퇴사자</option>
-      </select>
       <input type="text" id="searchInput" placeholder="이름 또는 전화번호로 검색" autocomplete="off">
+    </div>
+    <div class="status-row" id="statusRow">
+      <span class="row-label">재직 구분</span>
+      <button type="button" class="st-btn on" data-st="재직" onclick="toggleStatus('재직')">재직</button>
+      <button type="button" class="st-btn on-orange" data-st="퇴사예정" onclick="toggleStatus('퇴사예정')">퇴사예정</button>
+      <button type="button" class="st-btn" data-st="퇴사" onclick="toggleStatus('퇴사')">퇴사</button>
     </div>
     <div class="branch-row" id="branchRow">
       <button type="button" class="branch-btn active" data-office="" onclick="selectOffice('')">전체</button>
@@ -322,8 +335,10 @@
     return ' <span class="expire-badge ' + w.level + '">' + (w.level === 'urgent' ? '⛔' : '⚠') + ' D-' + w.dday + ' 소진 필요</span>';
   }
   function warnText(w) { return w ? 'D-' + w.dday + (w.level === 'urgent' ? ' (긴급)' : ' (주의)') : ''; }
-  var selectedOffice = '';
-  var selectedRole = '';
+  var selectedOffices = [];   // 비어 있으면 전체 지점
+  var selectedRoles = [];     // 비어 있으면 전체 업무구분
+  var selectedStatuses = ['재직', '퇴사예정']; // 비어 있으면 전체 (처음에는 지금과 같은 재직+퇴사예정)
+  function toggleIn_(arr, v) { var i = arr.indexOf(v); if (i === -1) arr.push(v); else arr.splice(i, 1); }
 
   // 지점명에 괄호가 있으면("광주(전주)") 괄호 앞부분을 대표 지점명으로 사용합니다.
   // 지점 버튼은 이 대표 이름 기준으로 중복 없이 하나만 만들고, 그 버튼을 누르면
@@ -403,28 +418,30 @@
   }
 
   function selectOffice(office) {
-    selectedOffice = office;
+    if (office === '') selectedOffices = []; else toggleIn_(selectedOffices, office);
     document.querySelectorAll('.branch-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-office') === office);
+      var o = btn.getAttribute('data-office');
+      btn.classList.toggle('active', o === '' ? selectedOffices.length === 0 : selectedOffices.indexOf(o) !== -1);
     });
-    selectedRole = '';
     populateRoleFilter();
     render();
   }
 
   function populateRoleFilter() {
     var row = document.getElementById('roleRow');
-    row.innerHTML = '<button type="button" class="role-btn active" data-role="" onclick="selectRole(\'\')">전체</button>';
     var roles = {};
     allRows.forEach(function(r) {
-      if (selectedOffice && branchLabel(r[COL_INFO.branch]) !== selectedOffice) return;
+      if (selectedOffices.length && selectedOffices.indexOf(branchLabel(r[COL_INFO.branch])) === -1) return;
       var role = (r[COL_INFO.role] || '').trim();
       if (role) roles[role] = true;
     });
+    // 지점 선택이 바뀌어 더 이상 없는 업무구분 선택은 풀어줍니다.
+    selectedRoles = selectedRoles.filter(function(x) { return roles[x]; });
+    row.innerHTML = '<button type="button" class="role-btn' + (selectedRoles.length === 0 ? ' active' : '') + '" data-role="" onclick="selectRole(\'\')">전체</button>';
     Object.keys(roles).sort().forEach(function(role) {
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'role-btn';
+      btn.className = 'role-btn' + (selectedRoles.indexOf(role) !== -1 ? ' active' : '');
       btn.setAttribute('data-role', role);
       btn.textContent = role;
       btn.onclick = function() { selectRole(role); };
@@ -433,9 +450,20 @@
   }
 
   function selectRole(role) {
-    selectedRole = role;
+    if (role === '') selectedRoles = []; else toggleIn_(selectedRoles, role);
     document.querySelectorAll('.role-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
+      var x = btn.getAttribute('data-role');
+      btn.classList.toggle('active', x === '' ? selectedRoles.length === 0 : selectedRoles.indexOf(x) !== -1);
+    });
+    render();
+  }
+
+  function toggleStatus(st) {
+    toggleIn_(selectedStatuses, st);
+    var cls = { '재직': 'on', '퇴사예정': 'on-orange', '퇴사': 'on-red' };
+    document.querySelectorAll('.st-btn').forEach(function(btn) {
+      var k = btn.getAttribute('data-st');
+      btn.className = 'st-btn' + (selectedStatuses.indexOf(k) !== -1 ? ' ' + cls[k] : '');
     });
     render();
   }
@@ -449,10 +477,9 @@
       var role = (r[COL_INFO.role] || '').trim();
       var isFreelanceType = role.indexOf('건수') !== -1 || role.indexOf('프리랜서') !== -1;
       if (!hasPhone || isFreelanceType) return false;
-      var sf = document.getElementById('statusFilter').value;
-      if (sf !== 'all' && (sf === 'resigned') !== isResigned(r)) return false;
-      if (selectedOffice && branchLabel(r[COL_INFO.branch]) !== selectedOffice) return false;
-      if (selectedRole && role !== selectedRole) return false;
+      if (selectedStatuses.length && selectedStatuses.indexOf(statusText(r)) === -1) return false;
+      if (selectedOffices.length && selectedOffices.indexOf(branchLabel(r[COL_INFO.branch])) === -1) return false;
+      if (selectedRoles.length && selectedRoles.indexOf(role) === -1) return false;
       if (q) {
         var name = r[COL_INFO.name] || '';
         var phone = r[COL_INFO.phone] || '';

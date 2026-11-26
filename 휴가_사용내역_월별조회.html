@@ -221,8 +221,9 @@
   }
 
   var histRows = null;
-  var selectedOffice = '';
-  var selectedRole = '';
+  var selectedOffices = [];   // 비어 있으면 전체 지점
+  var selectedRoles = [];     // 비어 있으면 전체 업무구분
+  function toggleIn_(arr, v) { var i = arr.indexOf(v); if (i === -1) arr.push(v); else arr.splice(i, 1); }
   var currentMonth = null;
   var lastMatches = [];
 
@@ -352,28 +353,30 @@
   }
 
   function selectOffice(office) {
-    selectedOffice = office;
+    if (office === '') selectedOffices = []; else toggleIn_(selectedOffices, office);
     document.querySelectorAll('.branch-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-office') === office);
+      var o = btn.getAttribute('data-office');
+      btn.classList.toggle('active', o === '' ? selectedOffices.length === 0 : selectedOffices.indexOf(o) !== -1);
     });
-    selectedRole = '';
     populateRoleFilter();
     if (currentMonth) render(currentMonth);
   }
 
   function populateRoleFilter() {
     var row = document.getElementById('roleRow');
-    row.innerHTML = '<button type="button" class="role-btn active" data-role="" onclick="selectRole(\'\')">전체</button>';
     var roles = {};
     histRows.forEach(function(r) {
-      if (selectedOffice && branchLabel(r[COL_HIST.branch]) !== selectedOffice) return;
+      if (selectedOffices.length && selectedOffices.indexOf(branchLabel(r[COL_HIST.branch])) === -1) return;
       var role = (r[COL_HIST.role] || '').trim();
       if (role) roles[role] = true;
     });
+    // 지점 선택이 바뀌어 더 이상 없는 업무구분 선택은 풀어줍니다.
+    selectedRoles = selectedRoles.filter(function(x) { return roles[x]; });
+    row.innerHTML = '<button type="button" class="role-btn' + (selectedRoles.length === 0 ? ' active' : '') + '" data-role="" onclick="selectRole(\'\')">전체</button>';
     Object.keys(roles).sort().forEach(function(role) {
       var btn = document.createElement('button');
       btn.type = 'button';
-      btn.className = 'role-btn';
+      btn.className = 'role-btn' + (selectedRoles.indexOf(role) !== -1 ? ' active' : '');
       btn.setAttribute('data-role', role);
       btn.textContent = role;
       btn.onclick = function() { selectRole(role); };
@@ -382,9 +385,10 @@
   }
 
   function selectRole(role) {
-    selectedRole = role;
+    if (role === '') selectedRoles = []; else toggleIn_(selectedRoles, role);
     document.querySelectorAll('.role-btn').forEach(function(btn) {
-      btn.classList.toggle('active', btn.getAttribute('data-role') === role);
+      var x = btn.getAttribute('data-role');
+      btn.classList.toggle('active', x === '' ? selectedRoles.length === 0 : selectedRoles.indexOf(x) !== -1);
     });
     if (currentMonth) render(currentMonth);
   }
@@ -452,8 +456,8 @@
       var ym = toYearMonth(row[COL_HIST.startDate]);
       var allMonths = document.getElementById('statusFilter').value === 'resigned'; // 퇴사자는 월과 무관하게 전체 기간
       if (!allMonths && ym !== month) return false;
-      if (selectedOffice && branchLabel(row[COL_HIST.branch]) !== selectedOffice) return false;
-      if (selectedRole && (row[COL_HIST.role] || '').trim() !== selectedRole) return false;
+      if (selectedOffices.length && selectedOffices.indexOf(branchLabel(row[COL_HIST.branch])) === -1) return false;
+      if (selectedRoles.length && selectedRoles.indexOf((row[COL_HIST.role] || '').trim()) === -1) return false;
       var id = (row[COL_HIST.memberId] || '').trim();
       var f = document.getElementById('statusFilter').value;
       if (f !== 'all') { var isRes = !!resignedIds[id]; if (f === 'resigned' ? !isRes : isRes) return false; }

@@ -17,7 +17,7 @@
 <meta name="msapplication-TileImage" content="mstile-150x150.png">
 <meta name="msapplication-TileColor" content="#0a080e">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>퇴사자 명단</title>
+<title>입퇴사 명단</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
@@ -149,23 +149,44 @@
   /* 지점·업무 다중선택: 켜진 버튼 앞에 체크 표시 ("전체" 제외) */
   .branch-btn.active:not([data-office=""])::before,
   .role-btn.active:not([data-role=""])::before { content: "\2713  "; }
+  .kind-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 12px; }
+  .row-label { font-size: 13px; font-weight: 700; color: var(--accent); margin-right: 2px; }
+  .kind-btn {
+    font-family: var(--sans); font-size: 14px; font-weight: 700;
+    padding: 9px 16px; border-radius: 999px; border: 1px solid var(--line);
+    background: #fdf9fe; color: var(--ink); cursor: pointer; white-space: nowrap;
+  }
+  .kind-btn.on-in { background: #2f9a5f; border-color: #2f9a5f; color: #fff; }
+  .kind-btn.on-out { background: #e53935; border-color: #e53935; color: #fff; }
+  .kind-hint { font-size: 12.5px; color: var(--muted); }
+  .tag.t-in { background: #2f9a5f; color: #fff; }
+  .tag.t-in-soon { background: #dff3e7; color: #2f9a5f; border: 1px solid #2f9a5f; }
+  .tag.t-out { background: #e53935; color: #fff; }
+  .tag.t-out-soon { background: #ff9800; color: #fff; }
   .multi-hint { font-size: 12.5px; color: var(--muted); margin: 10px 2px 0; }
 </style>
 </head>
 <body>
 <div class="wrap">
   <a class="back-home" href="index.html">‹ 매니저 관리 시스템으로 돌아가기</a>
-  <h1>퇴사자 명단</h1>
-  <p class="sub">최근 퇴사한 매니저와 퇴사예정 매니저 명단입니다.</p>
+  <h1>입퇴사 명단</h1>
+  <p class="sub">입사한 매니저와 퇴사·퇴사예정 매니저 명단입니다.</p>
   <p class="privacy-note">개인정보 보호를 위해 주민등록번호·계좌번호·주소 등은 표시하지 않습니다.</p>
 
   <div class="panel">
     <div class="controls">
       <input type="text" id="searchInput" placeholder="이름 또는 연락처로 검색" autocomplete="off">
     </div>
+    <div class="kind-row" id="kindRow">
+      <span class="row-label">구분</span>
+      <button type="button" class="kind-btn on-in" data-kind="in" onclick="toggleKind('in')">입사</button>
+      <button type="button" class="kind-btn on-out" data-kind="out" onclick="toggleKind('out')">퇴사</button>
+      <span class="kind-hint">(둘 다 켜면 입퇴사를 함께 보고, 하나도 안 켜면 전체가 보입니다)</span>
+    </div>
     <div class="month-row">
       <input type="month" id="monthInput">
       <button type="button" class="month-clear-btn" onclick="clearMonth()">월 조건 해제</button>
+      <span class="kind-hint">입사는 입사일, 퇴사는 퇴사일 기준으로 해당 월을 찾습니다.</span>
     </div>
     <div class="multi-hint">지점·업무 버튼을 여러 개 눌러 함께 볼 수 있습니다. (다시 누르면 해제, "전체"를 누르면 모두 해제)</div>
 <div class="branch-row" id="branchRow">
@@ -262,7 +283,7 @@
 
   // 현근무자 탭 rows에서 재직상태가 "퇴사"를 포함하는 행(=퇴사예정)만 골라, 퇴사자 탭과 같은
   // 열 구조(COL)의 행 배열로 바꿔 돌려줍니다. 각 행에는 _pending=true 표시가 붙습니다.
-  function parseActiveResigning_(rows) {
+  function parseActiveEvents_(rows) {
     var keys = Object.keys(ACTIVE_ALIASES);
     var map = null, start = 0;
     for (var r = 0; r < Math.min(rows.length, 10); r++) {
@@ -286,7 +307,6 @@
       var name = cell(row, 'name');
       if (!name) return;
       var status = cell(row, 'status');
-      if (status.indexOf('퇴사') === -1) return; // "퇴사예정" 등 퇴사가 들어간 재직상태만
       var o = [];
       o[COL.office] = cell(row, 'office');
       o[COL.role] = cell(row, 'role');
@@ -295,24 +315,37 @@
       o[COL.hireDate] = cell(row, 'hireDate');
       o[COL.resignDate] = cell(row, 'resignDate');
       o[COL.resignReason] = cell(row, 'reason');
-      o._pending = true;
-      out.push(o);
+      if (status.indexOf('퇴사') !== -1) { var po = o.slice(); po._pending = true; po._kind = 'out'; out.push(po); }
+      if (o[COL.hireDate]) { var io = o.slice(); io._kind = 'in'; out.push(io); } // 입사 기록 (퇴사예정자도 입사일은 있음)
     });
     return out;
   }
 
-  // 같은 사람이 퇴사자 탭에도 이미 있으면(이름+연락처, 또는 이름+입사일이 같으면) 중복으로 넣지 않습니다.
-  function mergePending_(resignedRows, pendingRows) {
+  // 같은 사람이 퇴사자 탭에도 이미 있으면 중복으로 넣지 않습니다.
+  //  - 퇴사 기록: 이름+연락처, 또는 이름+입사일이 같으면 중복
+  //  - 입사 기록: 이름+입사일이 같으면 중복 (퇴사자 탭에서 만든 입사 기록과 현근무자 탭 기록이 겹치는 경우)
+  function mergePending_(resignedRows, activeEvents) {
     function digits(s) { return String(s || '').replace(/[^0-9]/g, ''); }
     function baseName(s) { return String(s || '').replace(/\(.*?\)/g, '').replace(/\s+/g, ''); }
-    var merged = resignedRows.slice();
-    pendingRows.forEach(function(p) {
-      var dup = resignedRows.some(function(r) {
-        if (baseName(r[COL.name]) !== baseName(p[COL.name])) return false;
-        var rp = digits(r[COL.phone]), pp = digits(p[COL.phone]);
-        if (rp && pp) return rp === pp;
-        return String(r[COL.hireDate] || '').trim() === String(p[COL.hireDate] || '').trim();
-      });
+    var outs = resignedRows.map(function(r) { var c = r.slice(); c._kind = 'out'; return c; });
+    var ins = [];
+    resignedRows.forEach(function(r) {
+      if (String(r[COL.hireDate] || '').trim()) { var c = r.slice(); c._kind = 'in'; ins.push(c); }
+    });
+    var merged = outs.concat(ins);
+    activeEvents.forEach(function(p) {
+      var dup;
+      if (p._kind === 'in') {
+        dup = ins.some(function(r) { return baseName(r[COL.name]) === baseName(p[COL.name]) && String(r[COL.hireDate] || '').trim() === String(p[COL.hireDate] || '').trim(); });
+        if (!dup) ins.push(p);
+      } else {
+        dup = outs.some(function(r) {
+          if (baseName(r[COL.name]) !== baseName(p[COL.name])) return false;
+          var rp = digits(r[COL.phone]), pp = digits(p[COL.phone]);
+          if (rp && pp) return rp === pp;
+          return String(r[COL.hireDate] || '').trim() === String(p[COL.hireDate] || '').trim();
+        });
+      }
       if (!dup) merged.push(p);
     });
     return merged;
@@ -321,7 +354,8 @@
   var allRows = [];
   var selectedOffice = [];   // 선택된 지점들 (비어 있으면 전체)
   var selectedRole = [];     // 선택된 업무구분들 (비어 있으면 전체)
-  var selectedMonth = ''; // 'YYYY-MM' 형식, 비어있으면 전체 기간
+  var selectedMonth = ''; // 'YYYY-MM' 형식, 비어있으면 전체 기간 (처음에는 이번 달)
+  var selectedKinds = ['in', 'out']; // 입사/퇴사 (비어 있으면 둘 다)
 
   // 여러 날짜 표기("2026-09-30", "2026. 9. 30" 등)를 모두 인식하기 위한 파서.
   function parseDate(dateStr) {
@@ -330,6 +364,27 @@
     if (m) return new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, parseInt(m[3], 10));
     var t = Date.parse(dateStr);
     return isNaN(t) ? null : new Date(t);
+  }
+
+  // 한 행(입사 또는 퇴사 기록)의 기준 날짜와 구분 이름
+  function evDate_(r) { return parseDate(r._kind === 'in' ? r[COL.hireDate] : r[COL.resignDate]); }
+  function evLabel_(r) {
+    if (r._kind === 'in') {
+      var d = parseDate(r[COL.hireDate]), t = new Date(); t.setHours(0, 0, 0, 0);
+      return d && d > t ? '입사예정' : '입사';
+    }
+    var rd = parseDate(r[COL.resignDate]), t2 = new Date(); t2.setHours(0, 0, 0, 0);
+    return (r._pending || (rd && rd > t2)) ? '퇴사예정' : '퇴사'; // 퇴사일이 오늘 이후면 퇴사예정
+  }
+  var EV_CLASS = { '입사': 't-in', '입사예정': 't-in-soon', '퇴사': 't-out', '퇴사예정': 't-out-soon' };
+  function toggleKind(k) {
+    var i = selectedKinds.indexOf(k);
+    if (i === -1) selectedKinds.push(k); else selectedKinds.splice(i, 1);
+    document.querySelectorAll('.kind-btn').forEach(function(btn) {
+      var kk = btn.getAttribute('data-kind');
+      btn.className = 'kind-btn' + (selectedKinds.indexOf(kk) !== -1 ? ' on-' + kk : '');
+    });
+    render();
   }
 
   function clearMonth() {
@@ -477,8 +532,9 @@
     return allRows.filter(function(r) {
       if (selectedOffice.length && selectedOffice.indexOf(branchLabel(r[COL.office])) === -1) return false;
       if (selectedRole.length && selectedRole.indexOf((r[COL.role] || '').trim()) === -1) return false;
+      if (selectedKinds.length && selectedKinds.indexOf(r._kind) === -1) return false;
       if (selectedMonth) {
-        var d = parseDate(r[COL.resignDate]);
+        var d = evDate_(r);
         if (!d) return false;
         var ym = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
         if (ym !== selectedMonth) return false;
@@ -491,41 +547,44 @@
     });
   }
 
+  function evSort_(a, b) {
+    var da = evDate_(a), db = evDate_(b);
+    return (db ? db.getTime() : 0) - (da ? da.getTime() : 0);
+  }
+
   function render() {
     var container = document.getElementById('results');
 
     var filtered = getFilteredRows();
 
-    document.getElementById('count').textContent = '총 ' + filtered.length + '명' + (selectedMonth ? ' (' + selectedMonth + ')' : '');
+    var cnt = {};
+    filtered.forEach(function(r) { var l = evLabel_(r); cnt[l] = (cnt[l] || 0) + 1; });
+    var parts = ['입사', '입사예정', '퇴사', '퇴사예정'].filter(function(l) { return cnt[l]; }).map(function(l) { return l + ' ' + cnt[l]; });
+    document.getElementById('count').textContent = '총 ' + filtered.length + '명' + (selectedMonth ? ' (' + selectedMonth + ')' : '') + (parts.length ? ' · ' + parts.join(' · ') : '');
 
     if (filtered.length === 0) {
-      container.innerHTML = '<div class="empty">조건에 맞는 퇴사자가 없습니다.</div>';
+      container.innerHTML = '<div class="empty">조건에 맞는 입퇴사 내역이 없습니다.</div>';
       return;
     }
 
-    // Most recent 퇴사일 first.
-    filtered.sort(function(a, b) {
-      var da = Date.parse(a[COL.resignDate]);
-      var db = Date.parse(b[COL.resignDate]);
-      da = isNaN(da) ? 0 : da;
-      db = isNaN(db) ? 0 : db;
-      return db - da;
-    });
+    // 해당 날짜(입사일 또는 퇴사일) 최신순
+    filtered.sort(evSort_);
 
     var html = '<div class="table-scroll"><table><thead><tr>';
-    html += '<th>지점</th><th>구분</th><th>성명</th><th>연락처</th><th>입사일</th><th>퇴사일</th><th>사유</th>';
+    html += '<th>구분</th><th>지점</th><th>업무</th><th>성명</th><th>연락처</th><th>입사일</th><th>퇴사일</th><th>사유</th>';
     html += '</tr></thead><tbody>';
     filtered.forEach(function(r) {
+      var ev = evLabel_(r);
       html += '<tr>';
+      html += '<td><span class="tag ' + EV_CLASS[ev] + '">' + ev + '</span></td>';
       html += '<td>' + escapeHtml(r[COL.office] || '') + '</td>';
       html += '<td>' + escapeHtml(r[COL.role] || '') + '</td>';
       html += '<td><b>' + escapeHtml(r[COL.name] || '') + '</b></td>';
       html += '<td>' + escapeHtml(r[COL.phone] || '') + '</td>';
       html += '<td>' + escapeHtml(r[COL.hireDate] || '') + '</td>';
-      html += '<td>' + escapeHtml(r[COL.resignDate] || '') + '</td>';
+      html += '<td>' + escapeHtml(r._kind === 'in' ? '' : (r[COL.resignDate] || '')) + '</td>';
       var reason = r[COL.resignReason] || '';
-      var pendingTag = r._pending ? '<span class="tag pending">퇴사예정</span> ' : '';
-      html += '<td>' + pendingTag + (reason ? '<span class="' + reasonTag(reason) + '">' + escapeHtml(reason) + '</span>' : '') + '</td>';
+      html += '<td>' + (r._kind === 'out' && reason ? '<span class="' + reasonTag(reason) + '">' + escapeHtml(reason) + '</span>' : '') + '</td>';
       html += '</tr>';
     });
     html += '</tbody></table></div>';
@@ -565,7 +624,7 @@
       var waitResigned = function() {
         if (finished) return;
         if (resignedRows === null) { setTimeout(waitResigned, 50); return; }
-        try { pendingRows = parseActiveResigning_(rows); }
+        try { pendingRows = parseActiveEvents_(rows); }
         catch (e) { activeErr = e; pendingRows = []; }
         tryFinish();
       };
@@ -580,27 +639,20 @@
   // 내보냅니다. 주민등록번호·생년월일·주소·이메일·은행·계좌번호 등은 이 페이지에서
   // 애초에 읽어오지 않으므로(COL 정의 참고) 엑셀에도 포함되지 않습니다.
   function downloadExcel() {
-    var rows = getFilteredRows().slice().sort(function(a, b) {
-      var da = Date.parse(a[COL.resignDate]);
-      var db = Date.parse(b[COL.resignDate]);
-      da = isNaN(da) ? 0 : da;
-      db = isNaN(db) ? 0 : db;
-      return db - da;
-    });
+    var rows = getFilteredRows().slice().sort(evSort_);
     if (rows.length === 0) { alert('내려받을 데이터가 없습니다.'); return; }
-    var aoa = [['지점', '구분', '성명', '연락처', '입사일', '퇴사일', '사유', '상태']];
+    var aoa = [['구분', '지점', '업무', '성명', '연락처', '입사일', '퇴사일', '사유']];
     rows.forEach(function(r) {
       aoa.push([
-        r[COL.office] || '', r[COL.role] || '', r[COL.name] || '', r[COL.phone] || '',
-        r[COL.hireDate] || '', r[COL.resignDate] || '', r[COL.resignReason] || '',
-        r._pending ? '퇴사예정' : '퇴사'
+        evLabel_(r), r[COL.office] || '', r[COL.role] || '', r[COL.name] || '', r[COL.phone] || '',
+        r[COL.hireDate] || '', r._kind === 'in' ? '' : (r[COL.resignDate] || ''), r._kind === 'out' ? (r[COL.resignReason] || '') : ''
       ]);
     });
     var ws = XLSX.utils.aoa_to_sheet(aoa);
     var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '퇴사자명단');
-    var stamp = new Date().toISOString().slice(0, 10);
-    XLSX.writeFile(wb, '퇴사자_명단_' + stamp + '.xlsx');
+    XLSX.utils.book_append_sheet(wb, ws, '입퇴사명단');
+    var stamp = selectedMonth || new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(wb, '입퇴사_명단_' + stamp + '.xlsx');
   }
 
   document.getElementById('searchInput').addEventListener('input', render);
@@ -608,6 +660,14 @@
     selectedMonth = this.value || '';
     render();
   });
+
+  // 처음에는 이번 달로 열립니다. ("월 조건 해제"를 누르면 전체 기간)
+  (function initMonth_() {
+    var d = new Date();
+    var m = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    document.getElementById('monthInput').value = m;
+    selectedMonth = m;
+  })();
 
   loadAll();
 </script>
